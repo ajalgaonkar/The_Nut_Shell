@@ -13,7 +13,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
+#include <pwd.h>
 /*
  *
  *  FatalError(sb):  print message and exit.
@@ -59,6 +59,12 @@ void identify_word(char *wrd)
         get_dir(wrd);
     if(strcmp(wrd,"bye") == 0)
         exit_flag = 1;
+    if(strcmp(wrd,"cd")==0){
+        struct passwd *pw = getpwuid(getuid());
+        const char *homedir = pw->pw_dir;
+        if(chdir(homedir))
+            printf("Now on Home Dir!\n");
+    }
 }
 
 
