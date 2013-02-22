@@ -131,9 +131,15 @@ void get_dir(char *wrd)
                 }
                 d_name = entry->d_name;
                 if((stat(d_name,&sb1)==0)&&(S_ISREG(sb1.st_mode) && sb1.st_mode & 0111))
-                printf ("%s*\n",d_name);
+                    printf ("%s*\n",d_name);
                 else if(S_ISDIR(sb1.st_mode))
-                printf ("%s/\n",d_name);
+                    printf ("%s/\n",d_name);
+                else if(S_ISFIFO(sb1.st_mode))
+                    printf("%s|\n",d_name);
+                else if(S_ISLNK(sb1.st_mode))
+                    printf("%s@\n",d_name);
+                else if(S_ISSOCK(sb1.st_mode))
+                    printf("%s=\n",d_name);
                 else
                 printf ("%s\n",d_name);
             }
