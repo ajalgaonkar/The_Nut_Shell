@@ -52,20 +52,61 @@ char *sb;
 /* USER ajalgaonkar DEFINED SECTION */
 void identify_word(char *wrd)
 {
-    printf("Enter in word identify!!  %s \n",wrd);
+    printf("Enter in word identify!!  %s\n",wrd);
     if(wrd==NULL)
     printf("Error: No word entered\n");
     if(strcmp(wrd,"dir") == 0)
         get_dir(wrd);
     if(strcmp(wrd,"bye") == 0)
         exit_flag = 1;
-    if(strcmp(wrd,"cd")==0){
+    if(strcmp(wrd,"cd")==0)
+    {
         struct passwd *pw = getpwuid(getuid());
         const char *homedir = pw->pw_dir;
-        if(chdir(homedir))
-            printf("Now on Home Dir!\n");
+        if(chdir(homedir) == 0)
+            printf("Now on '%s'\n",homedir);
+    }
+    if(strncmp(wrd,"~",1) == 0)
+    {
+        printf("Enter Expansion");
+        char *expansion = tilde_expansion(wrd);
+        printf("Directory is: %s\n",expansion);
     }
 }
+
+
+void command_with_arg(char *cmd,char *arg)
+{
+    printf("Enter int command arg identify!! %s %s \n", cmd, arg);    
+}
+
+char *tilde_expansion(char *tilde)
+{
+    int len = strlen(tilde);
+    int i =0;
+    printf("\n\nExpansion for USER %s\n\n", tilde);
+    if(len == 1)
+    {
+        return(Home_Dir);
+    }
+    else{
+       
+            tilde++;
+            char *temp = tilde;
+            struct passwd *pw = getpwnam(temp);
+            char *user_dir = pw->pw_dir;
+            return(user_dir);
+        printf("\n\n %s \n\n",temp);
+    }
+
+}
+
+
+
+
+
+
+
 
 
 void get_dir(char *wrd)

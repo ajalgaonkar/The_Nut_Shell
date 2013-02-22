@@ -10,6 +10,7 @@
 #include <signal.h>
 void *malloc();
 int exit_flag;
+char *Home_Dir;
 main(argc, argv, envp)
 
 int argc;
@@ -45,6 +46,9 @@ int initialize()
 
 {
     /* Defined by student */
-    exit_flag = 0;
+   
+	struct passwd *pw = getpwuid(getuid());
+	Home_Dir = pw->pw_dir;
+	exit_flag = 0;
     return 0;
 }

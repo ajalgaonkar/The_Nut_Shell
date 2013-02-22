@@ -56,7 +56,7 @@
 %%
 command :	command2 EOL
 			{
-			    YaccDebug("command2 EOL");
+			    /*YaccDebug("command2 EOL");*/
 			    YYACCEPT;
 			}
 	|	command2 pipe_list EOL
@@ -110,12 +110,13 @@ command2:      	WORD
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
 			    identify_word($1);
-			    YaccDebug("WORD");
+			    /*YaccDebug("WORD");*/
 			}
 	|	WORD arg_list
 			{
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
+			    command_with_arg($1,$2);
 			    YaccDebug("WORD arg_list");
 			}
 	;
