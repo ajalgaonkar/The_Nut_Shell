@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include <sys/types.h>
-
+#include <sys/stat.h>
 
 /*
  *
@@ -52,26 +52,44 @@ char *sb;
 /* USER ajalgaonkar DEFINED SECTION */
 void identify_word(char *wrd)
 {
-    char cwd[1024];
-    DIR *d;
     printf("Enter in word identify!!  %s \n",wrd);
     if(wrd==NULL)
     printf("Error: No word entered\n");
-    if(strcmp(wrd,"dir") == 0){
+    if(strcmp(wrd,"dir") == 0)
+        get_dir(wrd);
+    if(strcmp(wrd,"bye") == 0)
+        exit_flag = 1;
+}
+
+
+void get_dir(char *wrd)
+{
+    char cwd[1024];
+    DIR *d;
+    struct stat sb1;
+
         printf("The directory will be listed...\n");
-        if (getcwd(cwd, sizeof(cwd)) != NULL){
+        if (getcwd(cwd, sizeof(cwd)) != NULL)
+        {
             printf("Current working dir: %s\n", cwd);
             d = opendir(cwd);
-            while (1) {
-            struct dirent * entry;
-            const char * d_name;
-            entry = readdir (d);
-            if (! entry) {
-                break;
+            while (1)
+            {
+                struct dirent * entry;
+                const char * d_name;
+                entry = readdir (d);
+                if (! entry)
+                {
+                    break;
+                }
+                d_name = entry->d_name;
+                if((stat(d_name,&sb1)==0)&&(S_ISREG(sb1.st_mode) && sb1.st_mode & 0111))
+                printf ("%s*\n",d_name);
+                else if(S_ISDIR(sb1.st_mode))
+                printf ("%s/\n",d_name);
+                else
+                printf ("%s\n",d_name);
             }
-            d_name = entry->d_name;
-            printf ("%s\t",d_name);
-            }
+            printf("\n");
         }
-    }
 }

@@ -9,7 +9,7 @@
 #include <sys/time.h>
 #include <signal.h>
 void *malloc();
-
+int exit_flag;
 main(argc, argv, envp)
 
 int argc;
@@ -27,9 +27,13 @@ char **argv, **envp;
 		ungetc(c, stdin);
 		yyparse();
 		printf(Prompt);
-		fflush(stdout); 
+		fflush(stdout);
+		if(exit_flag == 1){
+			printf("Thankyou for using Nutty Sheel :)!! \n\n");
+			break;
+		}
 	}
-
+	return 0;
 }
 
 
@@ -37,8 +41,10 @@ char **argv, **envp;
  *	initialize -- initialize the global vars.
  */
 
-initialize()
+int initialize()
 
 {
     /* Defined by student */
+    exit_flag = 0;
+    return 0;
 }
