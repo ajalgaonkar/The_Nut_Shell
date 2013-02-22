@@ -5,3 +5,5 @@
  */
 
 extern char *getsb(char *sb);
+
+extern void identify_word(char *wrd);

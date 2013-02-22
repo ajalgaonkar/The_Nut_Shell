@@ -473,9 +473,9 @@ static const yytype_int8 yyrhs[] =
 static const yytype_uint8 yyrline[] =
 {
        0,    57,    57,    62,    67,    72,    77,    82,    87,    92,
-      97,   102,   108,   114,   121,   126,   130,   135,   140,   144,
-     148,   153,   157,   162,   166,   171,   175,   179,   183,   188,
-     192
+      97,   102,   108,   115,   122,   127,   131,   136,   141,   145,
+     149,   154,   158,   163,   167,   172,   176,   180,   184,   189,
+     193
 };
 #endif
 
@@ -1492,12 +1492,13 @@ yyreduce:
     {
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
+			    identify_word((yyvsp[(1) - (1)].sb));
 			    YaccDebug("WORD");
 			}
     break;
 
   case 13:
-#line 115 "nut.y"
+#line 116 "nut.y"
     {
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
@@ -1506,119 +1507,119 @@ yyreduce:
     break;
 
   case 14:
-#line 122 "nut.y"
+#line 123 "nut.y"
     {
 			    YaccDebug("PIPE command2");
 			}
     break;
 
   case 15:
-#line 127 "nut.y"
+#line 128 "nut.y"
     {
 			    YaccDebug("pipe");
 			}
     break;
 
   case 16:
-#line 131 "nut.y"
+#line 132 "nut.y"
     {
 			    YaccDebug("pipe pipe_list");
 			}
     break;
 
   case 17:
-#line 136 "nut.y"
+#line 137 "nut.y"
     {
 			    YaccDebug("LESS WORD");
 			}
     break;
 
   case 18:
-#line 141 "nut.y"
+#line 142 "nut.y"
     {
 			    YaccDebug("output2");
 			}
     break;
 
   case 19:
-#line 145 "nut.y"
+#line 146 "nut.y"
     {
 			    YaccDebug("output2 error_redir");
 			}
     break;
 
   case 20:
-#line 149 "nut.y"
+#line 150 "nut.y"
     {
 			    YaccDebug("error_redir");
 			}
     break;
 
   case 21:
-#line 154 "nut.y"
+#line 155 "nut.y"
     {
 			    YaccDebug("GREATER WORD");
 			}
     break;
 
   case 22:
-#line 158 "nut.y"
+#line 159 "nut.y"
     {
 			    YaccDebug("GTGT WORD");
     			}
     break;
 
   case 23:
-#line 163 "nut.y"
+#line 164 "nut.y"
     {
 			    YaccDebug("TWOGT WORD");
 			}
     break;
 
   case 24:
-#line 167 "nut.y"
+#line 168 "nut.y"
     {
 			    YaccDebug("GTAMP");
 			}
     break;
 
   case 25:
-#line 172 "nut.y"
+#line 173 "nut.y"
     {
 			    YaccDebug("INTEGER");
 			}
     break;
 
   case 26:
-#line 176 "nut.y"
+#line 177 "nut.y"
     {
 			    YaccDebug("WORD");
 			}
     break;
 
   case 27:
-#line 180 "nut.y"
+#line 181 "nut.y"
     {
 			    YaccDebug("STRING");
 			}
     break;
 
   case 28:
-#line 184 "nut.y"
+#line 185 "nut.y"
     {
 			    YaccDebug("MINUS arg");
 			}
     break;
 
   case 29:
-#line 189 "nut.y"
+#line 190 "nut.y"
     {
 			    YaccDebug("arg");
 			}
     break;
 
   case 30:
-#line 193 "nut.y"
+#line 194 "nut.y"
     {
 			    YaccDebug("arg_list");
 			}
@@ -1626,7 +1627,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1630 "y.tab.c"
+#line 1631 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1840,7 +1841,7 @@ yyreturn:
 }
 
 
-#line 197 "nut.y"
+#line 198 "nut.y"
 
 
 yyerror(sb1)

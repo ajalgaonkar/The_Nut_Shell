@@ -109,6 +109,7 @@ command2:      	WORD
 			{
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
+			    identify_word($1);
 			    YaccDebug("WORD");
 			}
 	|	WORD arg_list

@@ -6,6 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include "funcs.h"
+#include <unistd.h>
+#include <stdio.h>
+#include <errno.h>
+#include <dirent.h>
+#include <limits.h>
+#include <sys/types.h>
 
 
 /*
@@ -42,3 +48,30 @@ char *sb;
   return(newsb);
 }
 
+
+/* USER ajalgaonkar DEFINED SECTION */
+void identify_word(char *wrd)
+{
+    char cwd[1024];
+    DIR *d;
+    printf("Enter in word identify!!  %s \n",wrd);
+    if(wrd==NULL)
+    printf("Error: No word entered\n");
+    if(strcmp(wrd,"dir") == 0){
+        printf("The directory will be listed...\n");
+        if (getcwd(cwd, sizeof(cwd)) != NULL){
+            printf("Current working dir: %s\n", cwd);
+            d = opendir(cwd);
+            while (1) {
+            struct dirent * entry;
+            const char * d_name;
+            entry = readdir (d);
+            if (! entry) {
+                break;
+            }
+            d_name = entry->d_name;
+            printf ("%s\t",d_name);
+            }
+        }
+    }
+}
