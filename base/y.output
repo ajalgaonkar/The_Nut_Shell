@@ -1,0 +1,539 @@
+Terminals which are not used
+
+   BYE
+   CD
+   DDOT
+   DOT
+   HISTORY
+   LIST
+   PATH
+   PROMPT
+   SEMI
+   SET
+   SLASH
+   TILDE
+   TILDEWORD
+   UNKNOWN
+
+
+Grammar
+
+    0 $accept: command $end
+
+    1 command: command2 EOL
+    2        | command2 pipe_list EOL
+    3        | command2 input EOL
+    4        | command2 output EOL
+    5        | command2 pipe_list input EOL
+    6        | command2 pipe_list output EOL
+    7        | command2 input output EOL
+    8        | command2 pipe_list input output EOL
+    9        | error EOL
+   10        | EOL
+
+   11 command2: WORD
+   12         | WORD arg_list
+
+   13 pipe: PIPE command2
+
+   14 pipe_list: pipe
+   15          | pipe pipe_list
+
+   16 input: LESS WORD
+
+   17 output: output2
+   18       | output2 error_redir
+   19       | error_redir
+
+   20 output2: GREATER WORD
+   21        | GTGT WORD
+
+   22 error_redir: TWOGT WORD
+   23            | GTAMP
+
+   24 arg: INTEGER
+   25    | WORD
+   26    | STRING
+   27    | MINUS arg
+
+   28 arg_list: arg
+   29         | arg arg_list
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256) 9
+BYE (258)
+CD (259)
+DDOT (260)
+DOT (261)
+EOL (262) 1 2 3 4 5 6 7 8 9 10
+GREATER (263) 20
+GTAMP (264) 23
+GTGT (265) 21
+HISTORY (266)
+INTEGER (267) 24
+LESS (268) 16
+LIST (269)
+MINUS (270) 27
+PATH (271)
+PIPE (272) 13
+PROMPT (273)
+SEMI (274)
+SET (275)
+SLASH (276)
+STRING (277) 26
+TILDE (278)
+TILDEWORD (279)
+TWOGT (280) 22
+UNKNOWN (281)
+WORD (282) 11 12 16 20 21 22 25
+
+
+Nonterminals, with rules where they appear
+
+$accept (28)
+    on left: 0
+command (29)
+    on left: 1 2 3 4 5 6 7 8 9 10, on right: 0
+command2 (30)
+    on left: 11 12, on right: 1 2 3 4 5 6 7 8 13
+pipe (31)
+    on left: 13, on right: 14 15
+pipe_list (32)
+    on left: 14 15, on right: 2 5 6 8 15
+input (33)
+    on left: 16, on right: 3 5 7 8
+output (34)
+    on left: 17 18 19, on right: 4 6 7 8
+output2 (35)
+    on left: 20 21, on right: 17 18
+error_redir (36)
+    on left: 22 23, on right: 18 19
+arg (37)
+    on left: 24 25 26 27, on right: 27 28 29
+arg_list (38)
+    on left: 28 29, on right: 12 29
+
+
+state 0
+
+    0 $accept: . command $end
+
+    error  shift, and go to state 1
+    EOL    shift, and go to state 2
+    WORD   shift, and go to state 3
+
+    command   go to state 4
+    command2  go to state 5
+
+
+state 1
+
+    9 command: error . EOL
+
+    EOL  shift, and go to state 6
+
+
+state 2
+
+   10 command: EOL .
+
+    $default  reduce using rule 10 (command)
+
+
+state 3
+
+   11 command2: WORD .
+   12         | WORD . arg_list
+
+    INTEGER  shift, and go to state 7
+    MINUS    shift, and go to state 8
+    STRING   shift, and go to state 9
+    WORD     shift, and go to state 10
+
+    $default  reduce using rule 11 (command2)
+
+    arg       go to state 11
+    arg_list  go to state 12
+
+
+state 4
+
+    0 $accept: command . $end
+
+    $end  shift, and go to state 13
+
+
+state 5
+
+    1 command: command2 . EOL
+    2        | command2 . pipe_list EOL
+    3        | command2 . input EOL
+    4        | command2 . output EOL
+    5        | command2 . pipe_list input EOL
+    6        | command2 . pipe_list output EOL
+    7        | command2 . input output EOL
+    8        | command2 . pipe_list input output EOL
+
+    EOL      shift, and go to state 14
+    GREATER  shift, and go to state 15
+    GTAMP    shift, and go to state 16
+    GTGT     shift, and go to state 17
+    LESS     shift, and go to state 18
+    PIPE     shift, and go to state 19
+    TWOGT    shift, and go to state 20
+
+    pipe         go to state 21
+    pipe_list    go to state 22
+    input        go to state 23
+    output       go to state 24
+    output2      go to state 25
+    error_redir  go to state 26
+
+
+state 6
+
+    9 command: error EOL .
+
+    $default  reduce using rule 9 (command)
+
+
+state 7
+
+   24 arg: INTEGER .
+
+    $default  reduce using rule 24 (arg)
+
+
+state 8
+
+   27 arg: MINUS . arg
+
+    INTEGER  shift, and go to state 7
+    MINUS    shift, and go to state 8
+    STRING   shift, and go to state 9
+    WORD     shift, and go to state 10
+
+    arg  go to state 27
+
+
+state 9
+
+   26 arg: STRING .
+
+    $default  reduce using rule 26 (arg)
+
+
+state 10
+
+   25 arg: WORD .
+
+    $default  reduce using rule 25 (arg)
+
+
+state 11
+
+   28 arg_list: arg .
+   29         | arg . arg_list
+
+    INTEGER  shift, and go to state 7
+    MINUS    shift, and go to state 8
+    STRING   shift, and go to state 9
+    WORD     shift, and go to state 10
+
+    $default  reduce using rule 28 (arg_list)
+
+    arg       go to state 11
+    arg_list  go to state 28
+
+
+state 12
+
+   12 command2: WORD arg_list .
+
+    $default  reduce using rule 12 (command2)
+
+
+state 13
+
+    0 $accept: command $end .
+
+    $default  accept
+
+
+state 14
+
+    1 command: command2 EOL .
+
+    $default  reduce using rule 1 (command)
+
+
+state 15
+
+   20 output2: GREATER . WORD
+
+    WORD  shift, and go to state 29
+
+
+state 16
+
+   23 error_redir: GTAMP .
+
+    $default  reduce using rule 23 (error_redir)
+
+
+state 17
+
+   21 output2: GTGT . WORD
+
+    WORD  shift, and go to state 30
+
+
+state 18
+
+   16 input: LESS . WORD
+
+    WORD  shift, and go to state 31
+
+
+state 19
+
+   13 pipe: PIPE . command2
+
+    WORD  shift, and go to state 3
+
+    command2  go to state 32
+
+
+state 20
+
+   22 error_redir: TWOGT . WORD
+
+    WORD  shift, and go to state 33
+
+
+state 21
+
+   14 pipe_list: pipe .
+   15          | pipe . pipe_list
+
+    PIPE  shift, and go to state 19
+
+    $default  reduce using rule 14 (pipe_list)
+
+    pipe       go to state 21
+    pipe_list  go to state 34
+
+
+state 22
+
+    2 command: command2 pipe_list . EOL
+    5        | command2 pipe_list . input EOL
+    6        | command2 pipe_list . output EOL
+    8        | command2 pipe_list . input output EOL
+
+    EOL      shift, and go to state 35
+    GREATER  shift, and go to state 15
+    GTAMP    shift, and go to state 16
+    GTGT     shift, and go to state 17
+    LESS     shift, and go to state 18
+    TWOGT    shift, and go to state 20
+
+    input        go to state 36
+    output       go to state 37
+    output2      go to state 25
+    error_redir  go to state 26
+
+
+state 23
+
+    3 command: command2 input . EOL
+    7        | command2 input . output EOL
+
+    EOL      shift, and go to state 38
+    GREATER  shift, and go to state 15
+    GTAMP    shift, and go to state 16
+    GTGT     shift, and go to state 17
+    TWOGT    shift, and go to state 20
+
+    output       go to state 39
+    output2      go to state 25
+    error_redir  go to state 26
+
+
+state 24
+
+    4 command: command2 output . EOL
+
+    EOL  shift, and go to state 40
+
+
+state 25
+
+   17 output: output2 .
+   18       | output2 . error_redir
+
+    GTAMP  shift, and go to state 16
+    TWOGT  shift, and go to state 20
+
+    $default  reduce using rule 17 (output)
+
+    error_redir  go to state 41
+
+
+state 26
+
+   19 output: error_redir .
+
+    $default  reduce using rule 19 (output)
+
+
+state 27
+
+   27 arg: MINUS arg .
+
+    $default  reduce using rule 27 (arg)
+
+
+state 28
+
+   29 arg_list: arg arg_list .
+
+    $default  reduce using rule 29 (arg_list)
+
+
+state 29
+
+   20 output2: GREATER WORD .
+
+    $default  reduce using rule 20 (output2)
+
+
+state 30
+
+   21 output2: GTGT WORD .
+
+    $default  reduce using rule 21 (output2)
+
+
+state 31
+
+   16 input: LESS WORD .
+
+    $default  reduce using rule 16 (input)
+
+
+state 32
+
+   13 pipe: PIPE command2 .
+
+    $default  reduce using rule 13 (pipe)
+
+
+state 33
+
+   22 error_redir: TWOGT WORD .
+
+    $default  reduce using rule 22 (error_redir)
+
+
+state 34
+
+   15 pipe_list: pipe pipe_list .
+
+    $default  reduce using rule 15 (pipe_list)
+
+
+state 35
+
+    2 command: command2 pipe_list EOL .
+
+    $default  reduce using rule 2 (command)
+
+
+state 36
+
+    5 command: command2 pipe_list input . EOL
+    8        | command2 pipe_list input . output EOL
+
+    EOL      shift, and go to state 42
+    GREATER  shift, and go to state 15
+    GTAMP    shift, and go to state 16
+    GTGT     shift, and go to state 17
+    TWOGT    shift, and go to state 20
+
+    output       go to state 43
+    output2      go to state 25
+    error_redir  go to state 26
+
+
+state 37
+
+    6 command: command2 pipe_list output . EOL
+
+    EOL  shift, and go to state 44
+
+
+state 38
+
+    3 command: command2 input EOL .
+
+    $default  reduce using rule 3 (command)
+
+
+state 39
+
+    7 command: command2 input output . EOL
+
+    EOL  shift, and go to state 45
+
+
+state 40
+
+    4 command: command2 output EOL .
+
+    $default  reduce using rule 4 (command)
+
+
+state 41
+
+   18 output: output2 error_redir .
+
+    $default  reduce using rule 18 (output)
+
+
+state 42
+
+    5 command: command2 pipe_list input EOL .
+
+    $default  reduce using rule 5 (command)
+
+
+state 43
+
+    8 command: command2 pipe_list input output . EOL
+
+    EOL  shift, and go to state 46
+
+
+state 44
+
+    6 command: command2 pipe_list output EOL .
+
+    $default  reduce using rule 6 (command)
+
+
+state 45
+
+    7 command: command2 input output EOL .
+
+    $default  reduce using rule 7 (command)
+
+
+state 46
+
+    8 command: command2 pipe_list input output EOL .
+
+    $default  reduce using rule 8 (command)
