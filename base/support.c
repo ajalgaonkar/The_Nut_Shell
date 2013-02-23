@@ -77,9 +77,24 @@ void identify_word(char *wrd)
 
 void command_with_arg(char *cmd,char *arg)
 {
-    printf("Enter int command arg identify!! %s %s \n", cmd, arg);    
+    printf("Enter int command arg identify!! %s %s \n", cmd, arg);
+    if(strcmp(cmd,"cd")==0)
+    {
+        char *path;
+        path = get_path(arg);
+        chdir(path);
+    }
 }
 
+char *get_path(char *arg)
+{
+    if(strncmp(arg,"~",1) == 0)
+    {
+        return(Home_Dir);
+    }
+    else
+    return(arg);
+}
 char *tilde_expansion(char *tilde)
 {
     int len = strlen(tilde);
@@ -94,18 +109,15 @@ char *tilde_expansion(char *tilde)
             tilde++;
             char *temp = tilde;
             struct passwd *pw = getpwnam(temp);
+            if(pw == NULL){
+                return("Invalid User Name!!\n");
+            }
             char *user_dir = pw->pw_dir;
             return(user_dir);
         printf("\n\n %s \n\n",temp);
     }
 
 }
-
-
-
-
-
-
 
 
 

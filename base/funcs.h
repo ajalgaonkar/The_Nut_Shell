@@ -12,5 +12,6 @@ extern void identify_word(char *wrd);
 extern void get_dir(char *wrd);
 extern void command_with_arg(char *cmd,char *arg);
 extern char *tilde_expansion(char *tilde);
+extern char *get_path(char *arg);
 
 extern int initialize();
