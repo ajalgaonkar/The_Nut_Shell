@@ -83,7 +83,12 @@ void identify_word(char *wrd)
 
 void command_with_arg(char *cmd,char *arg)
 {
-    printf("Enter int command arg identify!! %s %s \n", cmd, arg);
+	char *args[3];
+	args[0] = cmd;
+	args[1] = arg;
+	args[2] = (char *)0;
+	
+    printf("Enter int command arg identify!! %s %s \n", args[0], args[1]);
     if(strcmp(cmd,"cd")==0)
     {
         char *path;
@@ -91,6 +96,8 @@ void command_with_arg(char *cmd,char *arg)
         if(chdir(path) !=0)
         printf("\nInvalid Path\n");
     }
+	else if(findAndExecute(cmd,args,NULL,NULL))
+		printf("%s: command not found \n",cmd);
 }
 
 char *get_path(char *arg)
@@ -274,7 +281,7 @@ int set_write(int* wpipe)
 int execFile(char * cmd, char * args[], int* rpipe, int* wpipe)
 {
 	pid_t cpid;
-	
+	int i=0;
 	cpid = fork();
 	
 	if(cpid < 0)
@@ -294,10 +301,11 @@ int execFile(char * cmd, char * args[], int* rpipe, int* wpipe)
 		
 		//ExecV file
 		execv(cmd,args);
+		exit(0);
 	}
 	else								// Parent
 	{
-		//wait();							// Wait for fpid, command to complete
+		wait(cpid);							// Wait for fpid, command to complete
 		return 0;
 	}
 	
@@ -311,7 +319,6 @@ int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe)
 {
 	char *PATH = "/bin:/usr/bin";
 	char paths[10][256];
-	
 	char cfp[256]; 							// full path of cmd
 	int pn=0,i,r1;
 	
@@ -342,7 +349,7 @@ int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe)
 		return -1;
 	}
 	printf("Executing command: %s \n",cfp);
-	
+		
 	execFile(cfp,args,rpipe,wpipe);
 	
 	return 0;
