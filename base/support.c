@@ -82,7 +82,8 @@ void command_with_arg(char *cmd,char *arg)
     {
         char *path;
         path = get_path(arg);
-        chdir(path);
+        if(chdir(path) !=0)
+        printf("\nInvalid Path\n");
     }
 }
 
@@ -90,11 +91,12 @@ char *get_path(char *arg)
 {
     if(strncmp(arg,"~",1) == 0)
     {
-        return(Home_Dir);
+        return(tilde_expansion(arg));
     }
     else
     return(arg);
 }
+
 char *tilde_expansion(char *tilde)
 {
     int len = strlen(tilde);
@@ -108,12 +110,51 @@ char *tilde_expansion(char *tilde)
        
             tilde++;
             char *temp = tilde;
-            struct passwd *pw = getpwnam(temp);
-            if(pw == NULL){
-                return("Invalid User Name!!\n");
+            char *temp2 = tilde;
+            char user[20];
+            int i = 0;
+            char *path;
+            char *path2 = strpbrk(temp,"/");
+
+            if(path2 != NULL)
+            {
+                printf("\nContains / \n");
+
+                if(strncmp(temp,"/",1) != 0)
+                {
+
+                    while(strncmp(temp2,"/",1) != 0)
+                    {
+                        user[i] = *temp2;
+                        temp2++;
+                        i++;
+                    }
+                    i =0;
+                    struct passwd *pw = getpwnam(user);
+                    if(pw == NULL){
+                        printf("Invalid User Name!!\n");
+                        return(".");
+                    }
+                    char *user_dir = pw->pw_dir;
+                    printf("\n%s\n",temp);
+                    path = strcat(user_dir,path2);
+                    printf("\n..%s..\n",path);
+                    return(path);
+                }
+                else
+                return(strcat(Home_Dir,path2));
             }
-            char *user_dir = pw->pw_dir;
-            return(user_dir);
+            else
+            {
+                struct passwd *pw = getpwnam(temp);
+                if(pw == NULL){
+                    printf("Invalid User Name!!\n");
+                    return(".");
+                }
+                char *user_dir = pw->pw_dir;
+                printf("\n..%s..\n",user_dir);
+                return(user_dir);
+            }
         printf("\n\n %s \n\n",temp);
     }
 
