@@ -84,11 +84,11 @@ void identify_word(char *wrd)
         char *expansion = tilde_expansion(wrd);
         printf("Directory is: %s\n",expansion);
     }
-    else if( strcmp(wrd,"printenv") == 0 )						// Juned : Call to print the Environment Variables
+    else if( strcmp(wrd,"printenv") == 0 )						// Call to print the Environment Variables
     { 
     	linkedlist_print(&node_head_env); 							// print the Env linkedlist
     }
-    else if( strcmp(wrd,"printenv") == 0 )						// Juned : Call to print the Aliases
+    else if( strcmp(wrd,"printenv") == 0 )						// Call to print the Aliases
     { 
     	linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
     }
@@ -513,24 +513,50 @@ int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
         char *expansion = tilde_expansion(cmd);
         printf("Directory is: %s\n",expansion);
     }
-    else if( strcmp(cmd,"printenv") == 0 )						// Juned : Call to print the Environment Variables
+    else if( strcmp(cmd,"printenv") == 0 )								// Call to print the Environment Variables
     { 
-    	linkedlist_print(&node_head_env); 							// print the Env linkedlist
-    }
-    else if( strcmp(cmd,"alias") == 0 )						// Juned : Call to print the Aliases
-    { 
-    	linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
+    	linkedlist_print(&node_head_env); 								// print the Env linkedlist
     }
     else if( strcmp(cmd,"unset")==0 )
     {
     	if(args[1] == NULL)
 		{    
 			printf("\nPlease enter a Variable Name to unset\n");
-			return;
+			return 0;
 		}
 		printf("Trying to Delete....\n");
-		printf("%s\n", linkedlist_delete_node(&node_head_env, args[1])); //pop the linkedlist's head
+		printf("%s\n", linkedlist_delete_node(&node_head_env, args[1])); 		// Deleete the linkedlist's head
 		 	
+    }
+    else if( strcmp(cmd,"unalias")==0 )
+    {
+    	if(args[1] == NULL)
+		{    
+			printf("\nPlease enter a word to unset\n");
+			return 0;
+		}
+		printf("Trying to Delete....\n");
+		printf("%s\n", linkedlist_delete_node(&node_head_aliases, args[1])); 	// Delete the linkedlist's head
+		 	
+    }
+    else if( strcmp(cmd,"setenv") == 0 )
+    {
+    	if(args[1] != NULL && args[2] != NULL)
+    	{
+    		linkedlist_insert(&node_head_env, args[1],args[2]); 				// Insert the Variable,Word Environment Variable Pair
+    	}
+    	else
+    		printf("\nInvalid command to set Environment Variables.\n");
+    }
+    else if( strcmp(cmd,"alias") == 0 )
+    {
+    	if(args[1] != NULL && args[2] != NULL )
+    	{
+    		linkedlist_insert(&node_head_aliases, args[1],args[2]); 			// Insert the Word,String Aliases Pair
+    	}
+    	else
+    		linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
+    		//printf("\nInvalid command to set Aliases.\n");
     }
 	else
 	{
@@ -586,7 +612,7 @@ void execCmdLine()
 		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,NULL);
 		cmdLine.inFile = NULL;
 		cmdLine.outFile = NULL;
-		wait();
+		//wait();
 	}
 	
 	//Multiple commands needing pipe
@@ -679,6 +705,7 @@ void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data va
 	    node_new -> next = *node_head;
 	    *node_head = node_new;
 	}
+	printf("Successfully Inserted: %s\n", value);
 }
  
 // Removes the Node of the specified key
@@ -712,7 +739,7 @@ void linkedlist_print(Node **node_head)
     Node *node_curr = *node_head;
      
     if(!node_curr)
-        puts("No Environment Variables present.");
+        puts("No Variables present.");
     else
     {
         while(node_curr)

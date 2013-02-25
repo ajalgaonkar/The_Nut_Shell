@@ -131,7 +131,7 @@
 #include "nutty.h"    /* declarations of external variables */
 #include "funcs.h"    /* declarations of functions declared in support.c */
 
-    int YaccDebugFlag = 1;
+    int YaccDebugFlag = 0;
     void YaccDebug();
 
 
@@ -472,10 +472,10 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    57,    57,    62,    67,    72,    77,    82,    87,    92,
-      97,   102,   108,   115,   123,   128,   132,   137,   142,   146,
-     150,   155,   159,   164,   168,   173,   177,   181,   185,   190,
-     194
+       0,    57,    57,    63,    69,    75,    81,    87,    93,    99,
+     105,   111,   117,   126,   136,   141,   145,   150,   156,   161,
+     165,   171,   176,   182,   187,   193,   199,   205,   211,   218,
+     223
 };
 #endif
 
@@ -1411,224 +1411,254 @@ yyreduce:
 #line 58 "nut.y"
     {
 			    /*YaccDebug("command2 EOL");*/
+				processCmdLine();
 			    YYACCEPT;
 			}
     break;
 
   case 3:
-#line 63 "nut.y"
+#line 64 "nut.y"
     {
 			    YaccDebug("command2 pipe_list EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
     break;
 
   case 4:
-#line 68 "nut.y"
+#line 70 "nut.y"
     {
 			    YaccDebug("command2 input EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
     break;
 
   case 5:
-#line 73 "nut.y"
+#line 76 "nut.y"
     {
 			    YaccDebug("command2 output EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
     break;
 
   case 6:
-#line 78 "nut.y"
+#line 82 "nut.y"
     {
 			    YaccDebug("command2 pipe_list input EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
     break;
 
   case 7:
-#line 83 "nut.y"
+#line 88 "nut.y"
     {
 			    YaccDebug("command2 pipe_list output EOL");
+				processCmdLine();
 			    YYACCEPT;
 			}
     break;
 
   case 8:
-#line 88 "nut.y"
+#line 94 "nut.y"
     {
 			    YaccDebug("command2 input output EOL");
+				processCmdLine();
 			    YYACCEPT;
 			}
     break;
 
   case 9:
-#line 93 "nut.y"
+#line 100 "nut.y"
     {
 			    YaccDebug("command2 pipe_list input output EOL");
+				processCmdLine();
 			    YYACCEPT;
 			}
     break;
 
   case 10:
-#line 98 "nut.y"
+#line 106 "nut.y"
     {
 			    YaccDebug("error EOL");
+				processCmdLine();
 			    YYABORT;
 			}
     break;
 
   case 11:
-#line 103 "nut.y"
+#line 112 "nut.y"
     {
-			    YaccDebug("EOL");
+			    processCmdLine();
 			    YYACCEPT;
 			}
     break;
 
   case 12:
-#line 109 "nut.y"
+#line 118 "nut.y"
     {
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
-			    identify_word((yyvsp[(1) - (1)].sb));
+			    /* identify_word($1); */
 			    /*YaccDebug("WORD");*/
+				//printf("command with no args found\n");
+				insertCommand((yyvsp[(1) - (1)].sb),NULL,0);
 			}
     break;
 
   case 13:
-#line 116 "nut.y"
+#line 127 "nut.y"
     {
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
-			    command_with_arg((yyvsp[(1) - (2)].sb),(yyvsp[(2) - (2)].args));
-			    YaccDebug("WORD arg_list");
+			    /* command_with_arg($1,$2); */
+			    /* YaccDebug("WORD arg_list"); */
+				//printf("command with args found\n");
+				insertCommand((yyvsp[(1) - (2)].sb),NULL,0);
 			}
     break;
 
   case 14:
-#line 124 "nut.y"
+#line 137 "nut.y"
     {
 			    YaccDebug("PIPE command2");
 			}
     break;
 
   case 15:
-#line 129 "nut.y"
+#line 142 "nut.y"
     {
 			    YaccDebug("pipe");
 			}
     break;
 
   case 16:
-#line 133 "nut.y"
+#line 146 "nut.y"
     {
 			    YaccDebug("pipe pipe_list");
 			}
     break;
 
   case 17:
-#line 138 "nut.y"
+#line 151 "nut.y"
     {
 			    YaccDebug("LESS WORD");
+				setInputRedir((yyvsp[(2) - (2)].sb));
 			}
     break;
 
   case 18:
-#line 143 "nut.y"
+#line 157 "nut.y"
     {
 			    YaccDebug("output2");
+				//setOutputRedir($1);
 			}
     break;
 
   case 19:
-#line 147 "nut.y"
+#line 162 "nut.y"
     {
 			    YaccDebug("output2 error_redir");
 			}
     break;
 
   case 20:
-#line 151 "nut.y"
+#line 166 "nut.y"
     {
 			    YaccDebug("error_redir");
+				//setErrRedir($1);
 			}
     break;
 
   case 21:
-#line 156 "nut.y"
+#line 172 "nut.y"
     {
 			    YaccDebug("GREATER WORD");
+				setOutputRedir((yyvsp[(2) - (2)].sb),0);
 			}
     break;
 
   case 22:
-#line 160 "nut.y"
+#line 177 "nut.y"
     {
 			    YaccDebug("GTGT WORD");
-    			}
+				setOutputRedir((yyvsp[(2) - (2)].sb),1);
+    		}
     break;
 
   case 23:
-#line 165 "nut.y"
+#line 183 "nut.y"
     {
 			    YaccDebug("TWOGT WORD");
+				setErrRedir((yyvsp[(2) - (2)].sb),0);
 			}
     break;
 
   case 24:
-#line 169 "nut.y"
+#line 188 "nut.y"
     {
 			    YaccDebug("GTAMP");
+				setErrRedir("STDOUT",1);
 			}
     break;
 
   case 25:
-#line 174 "nut.y"
+#line 194 "nut.y"
     {
 			    YaccDebug("INTEGER");
+				//printf("Integer Argument Found!\n");
+				addArgToCurCmd((yyvsp[(1) - (1)].sb));
 			}
     break;
 
   case 26:
-#line 178 "nut.y"
+#line 200 "nut.y"
     {
 			    YaccDebug("WORD");
+				//printf("Word Argument Found!\n");
+				addArgToCurCmd((yyvsp[(1) - (1)].sb));
 			}
     break;
 
   case 27:
-#line 182 "nut.y"
+#line 206 "nut.y"
     {
 			    YaccDebug("STRING");
+				//printf("String Argument Found!\n");
+				addArgToCurCmd((yyvsp[(1) - (1)].sb));
 			}
     break;
 
   case 28:
-#line 186 "nut.y"
+#line 212 "nut.y"
     {
 			    YaccDebug("MINUS arg");
+				//printf("Minus Argument Found!\n");
+				
 			}
     break;
 
   case 29:
-#line 191 "nut.y"
+#line 219 "nut.y"
     {
 			    YaccDebug("arg");
+				//printf("Argument Found in arglist!\n");
 			}
     break;
 
   case 30:
-#line 195 "nut.y"
+#line 224 "nut.y"
     {
 			    YaccDebug("arg_list");
+				//printf("Heres an argument list!\n");
 			}
     break;
 
 
 /* Line 1267 of yacc.c.  */
-#line 1632 "y.tab.c"
+#line 1662 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1842,22 +1872,20 @@ yyreturn:
 }
 
 
-#line 199 "nut.y"
+#line 229 "nut.y"
 
 
 yyerror(sb1)
-
 char *sb1;
-
 {
 	fprintf(stderr, "Error detected:  %s\n", sb1);
 }
 
+
 void YaccDebug(char *sb)
 {
     if (YaccDebugFlag) {
-	fprintf(stderr, "-- %s --\n", sb);
+	//fprintf(stderr, "-- %s --\n", sb);
     }
-
 }
 
