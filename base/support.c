@@ -3,17 +3,18 @@
  *  Support routines for the nut shell
  */
 
-#include <stdlib.h>
+
 #include <string.h>
+#include "linkedlist.h"
 #include "funcs.h"
 #include <unistd.h>
-#include <stdio.h>
 #include <errno.h>
 #include <dirent.h>
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pwd.h>
+
 
 /*
  *
@@ -28,12 +29,20 @@ void FatalError(char *sb)
     exit(1);
 }
 
+
+/* 
+ *		Juned LinkedList Implementation
+ */ 
+Node *node_head_env = NULL; 								// Juned : Global Pointer to linkedlist head
+Node *node_head_aliases = NULL;
+
+int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe);
+
 /*
  *
  *  getsb(sb) -- returns a new sb of length strlen(sb)
  * 
  */
-
 char *getsb(sb)
 
 char *sb;
@@ -75,7 +84,14 @@ void identify_word(char *wrd)
         char *expansion = tilde_expansion(wrd);
         printf("Directory is: %s\n",expansion);
     }
-	
+    else if( strcmp(wrd,"printenv") == 0 )						// Juned : Call to print the Environment Variables
+    { 
+    	linkedlist_print(&node_head_env); 							// print the Env linkedlist
+    }
+    else if( strcmp(wrd,"printenv") == 0 )						// Juned : Call to print the Aliases
+    { 
+    	linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
+    }
 	else if(findAndExecute(wrd,args,NULL,NULL))
 		printf("%s: command not found \n",wrd);
 }
@@ -95,6 +111,17 @@ void command_with_arg(char *cmd,char *arg)
         path = get_path(arg);
         if(chdir(path) !=0)
         printf("\nInvalid Path\n");
+    }
+    else if( strcmp(cmd,"unset")==0 )
+    {
+    	if(arg == NULL)
+		{    
+			printf("\nPlease enter a Variable Name to unset\n");
+			return;
+		}
+		printf("Trying to Delete....\n");
+		printf("%s\n", linkedlist_delete_node(&node_head_env, arg)); //pop the linkedlist's head
+		 	
     }
 	else if(findAndExecute(cmd,args,NULL,NULL))
 		printf("%s: command not found \n",cmd);
@@ -305,7 +332,7 @@ int execFile(char * cmd, char * args[], int* rpipe, int* wpipe)
 	}
 	else								// Parent
 	{
-		wait(cpid);							// Wait for fpid, command to complete
+		//wait(0);							// Wait for fpid, command to complete
 		return 0;
 	}
 	
@@ -353,6 +380,133 @@ int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe)
 	execFile(cfp,args,rpipe,wpipe);
 	
 	return 0;
+}
+
+
+// Juned Functions 
+
+// Returns the lenght of the Linked_List
+int linkedlist_len(Node *node_head)
+{
+    Node *curr = node_head;
+    int len = 0;
+     
+    while(curr)
+    {
+        ++len;
+        curr = curr -> next;
+    }
+    return len;
+}
+ 
+
+// Inserts Key,Value into the Linked_List 
+void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data value)
+{
+	if(linkedlist_find(node_head, key)) {
+		Node *node_curr = *node_head;
+	
+		do {
+			if(strcmp(node_curr -> key, key) == 0) {
+				node_curr -> value = value;
+				return;
+			}
+			node_curr = node_curr -> next;
+		}while(node_curr);
+	}
+	else {
+	    Node *node_new = malloc(sizeof(Node));
+	     
+	    node_new -> key = key;
+	    node_new -> value = value;
+	    node_new -> next = *node_head;
+	    *node_head = node_new;
+	}
+}
+ 
+// Removes the Node of the specified key
+linkedlist_data linkedlist_delete_node(Node **node_head, linkedlist_data key)
+{
+	linkedlist_data result = "No Variable Found !";
+	Node *node_curr = *node_head;
+	Node *node_prev = NULL;
+	
+	while(node_curr) {
+		if(strcmp(node_curr -> key, key) == 0) {
+			result = node_curr -> value;
+			if(node_prev == NULL) { 
+				*node_head = node_curr -> next;
+			}
+			else {
+				node_prev -> next = node_curr -> next;
+			}
+			free(node_curr);
+			return result;
+		}
+		node_prev = node_curr;
+		node_curr = node_curr -> next;
+	}
+	return result;
+}
+ 
+// Prints the Linked_List
+void linkedlist_print(Node **node_head)
+{
+    Node *node_curr = *node_head;
+     
+    if(!node_curr)
+        puts("No Environment Variables present.");
+    else
+    {
+        while(node_curr)
+        {
+            printf("%s = %s\n", node_curr -> key, node_curr -> value); //set for integers, modifiable
+            node_curr = node_curr -> next;
+        }
+        putchar('\n');
+    }
+}
+ 
+// Empties the Linked_List
+void linkedlist_clear(Node **node_head)
+{ 
+    while(*node_head) {
+   		Node *node_prev = *node_head;
+        *node_head = node_prev -> next;
+        free(node_prev);
+    }
+}
+ 
+// Snocs the Node at the end.
+void linkedlist_snoc(Node **node_head, linkedlist_data key, linkedlist_data value)
+{
+    Node *node_curr = *node_head;
+     
+    if(!node_curr)
+        linkedlist_insert(node_head, key, value);
+    else
+    {
+        //find the last node
+        while(node_curr -> next)
+            node_curr = node_curr -> next;
+        //build the node after it
+        linkedlist_insert(&(node_curr -> next), key, value);
+    }
+}
+ 
+// Returns 1 if Node with k key is present in the Linked_List
+int linkedlist_find(Node **node_head, linkedlist_data k)
+{
+    Node *node_curr = *node_head;
+     
+    while(node_curr)
+    {
+        if(strcmp(node_curr -> key, k) == 0) //set for numbers, modifiable
+            return 1;
+        else
+            node_curr = node_curr -> next;
+    }
+    return 0;
 }
 
 

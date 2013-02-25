@@ -17,9 +17,9 @@
 #	list	to list files changed since the last listing
 #	lint	to check your program with lint
 
-HDR =  nutty.h init.h funcs.h
+HDR =  nutty.h init.h funcs.h linkedlist.h
 HDRg = y.tab.h
-SRC =  main.c support.c 
+SRC =  main.c support.c linkedlist.c
 SRCg = lex.yy.c y.tab.c
 OBJ =  main.o lex.yy.o y.tab.o support.o 
 DEP = ${SRC} ${SRCg}
@@ -44,6 +44,6 @@ y.tab.c: nut.y
 info.h: y.tab.c
 
 main.o: info.h init.h funcs.h
-support.o: nutty.h funcs.h
+support.o: nutty.h funcs.h linkedlist.h
 lex.yy.o: stdio.h info.h
 y.tab.o: nutty.h funcs.h
