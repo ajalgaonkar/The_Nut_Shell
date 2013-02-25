@@ -36,17 +36,17 @@ void FatalError(char *sb)
 Node *node_head_env = NULL; 								// Juned : Global Pointer to linkedlist head
 Node *node_head_aliases = NULL;
 
-int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe);
+
+//Varun declarations
+struct commandLine cmdLine;
+struct command * curCmd;
 
 /*
  *
  *  getsb(sb) -- returns a new sb of length strlen(sb)
  * 
  */
-char *getsb(sb)
-
-char *sb;
-
+char *getsb(char *sb)
 {
   char *newsb;
 
@@ -66,8 +66,8 @@ void identify_word(char *wrd)
 	
     printf("Enter in word identify!!  %s\n",wrd);
     if(wrd==NULL)
-    printf("Error: No word entered\n");
-    if(strcmp(wrd,"dir") == 0)
+		printf("Error: No word entered\n");
+    else if(strcmp(wrd,"dir") == 0)
         get_dir(wrd);
     else if(strcmp(wrd,"bye") == 0)
         exit_flag = 1;
@@ -92,7 +92,7 @@ void identify_word(char *wrd)
     { 
     	linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
     }
-	else if(findAndExecute(wrd,args,NULL,NULL))
+	else if(findAndExecCmd(wrd,args,NULL,NULL))
 		printf("%s: command not found \n",wrd);
 }
 
@@ -123,7 +123,7 @@ void command_with_arg(char *cmd,char *arg)
 		printf("%s\n", linkedlist_delete_node(&node_head_env, arg)); //pop the linkedlist's head
 		 	
     }
-	else if(findAndExecute(cmd,args,NULL,NULL))
+	else if(findAndExecCmd(cmd,args,NULL,NULL))
 		printf("%s: command not found \n",cmd);
 }
 
@@ -248,7 +248,122 @@ void get_dir(char *wrd)
 
 
 
-//// Varun functions
+/* -------------------------------- Varun Functions start ---------------------------*/
+
+
+int insertCommand(char *cmd,char *args[],int argc)
+{
+	//Perform Tilde Expansion and alias resolution on command
+	int i;
+	struct command * newCmd;
+	
+	if(cmdLine.commandCnt<MAXCMDS)
+	{
+		if(!curCmd) 								//Command with no arguments comes here
+		{
+			newCmd = (struct command *)malloc(sizeof(struct command));
+			newCmd->argc = 0;
+			newCmd->cmd = cmd;
+			newCmd->argv[newCmd->argc] = cmd;
+			newCmd->argc++;
+			for(i=0;i<argc;i++)
+			{
+				newCmd->argv[newCmd->argc] = args[i];
+				newCmd->argc++;
+			}
+			newCmd->argv[newCmd->argc] = NULL;
+			newCmd->argc++;
+			
+			cmdLine.commands[cmdLine.commandCnt] = newCmd;
+			cmdLine.commandCnt++;
+		}
+		else										//Commands with arguments already parsed comes here
+		{
+			curCmd->cmd = cmd;
+			curCmd->argv[0]=cmd;
+			
+			for(i=0;i<argc;i++)						//TODO: Boundry Check
+			{
+				curCmd->argv[curCmd->argc-1] = args[i];
+				curCmd->argv[curCmd->argc] = NULL;
+				curCmd->argc++;
+			}
+		}
+		
+		curCmd = NULL;
+		
+		return 0;
+	}
+	return -1;
+}
+
+void addArgToCurCmd(char *arg)
+{
+	if(curCmd && curCmd->argc<MAXARGS)
+	{
+		curCmd->argv[curCmd->argc-1] = arg;
+		curCmd->argv[curCmd->argc] = NULL;
+		curCmd->argc++;
+	}
+	else if(!curCmd) 
+	{
+		curCmd = (struct command *)malloc(sizeof(struct command));
+		curCmd->argc = 1;
+		curCmd->argv[curCmd->argc] = arg;
+		curCmd->argc++;
+		curCmd->argv[curCmd->argc] = NULL;
+		curCmd->argc++;
+		
+		cmdLine.commands[cmdLine.commandCnt] = curCmd; //TODO: boundry check
+		cmdLine.commandCnt++;
+	}
+}
+
+void setInputRedir(char *fn)
+{
+	cmdLine.inFile = fn;	
+}
+
+void setOutputRedir(char *fn, int mode)
+{
+	cmdLine.outFile = fn;
+	cmdLine.outWriteMode = mode;
+}
+void setErrRedir(char *fn, int mode)
+{
+	cmdLine.errFile = fn;
+	cmdLine.errWriteMode = mode;
+}
+
+
+
+void printCmdline()
+{
+	int i=0,j=0;
+	printf("\nNumber of commands: %d\n",cmdLine.commandCnt);
+	for(i=0;i<cmdLine.commandCnt;i++)
+	{	
+		printf("\nCMD%d: \"%s\" ARG#=%d\n",i+1,cmdLine.commands[i]->cmd,cmdLine.commands[i]->argc-2);
+		for(j=1;j<cmdLine.commands[i]->argc-1;j++)
+			printf("\tARG%d: \"%s\" \n",j,cmdLine.commands[i]->argv[j]);
+	}
+	printf("\n");
+	
+	if(cmdLine.inFile)
+		printf("Input Stream for first command will be read from file: %s\n",cmdLine.inFile);
+		
+	if(cmdLine.outFile && cmdLine.outWriteMode==0)
+		printf("Output Stream of command line will be Written to file: %s\n",cmdLine.outFile);
+	else if(cmdLine.outFile)
+		printf("Output Stream of command line will be Appended to file: %s\n",cmdLine.outFile);
+		
+	if(cmdLine.errFile && cmdLine.errWriteMode==0)
+		printf("Error Stream of command line will be Written to file: %s\n",cmdLine.errFile);
+	else if(cmdLine.errFile)
+		printf("Error Stream of command line will be Appended to file: %s\n",cmdLine.errFile);
+
+}
+
 
 //Returns  0 if file found and is executable
 //Returns -1 if file is not found 
@@ -260,7 +375,7 @@ int checkIfExecutable(char *filePath)
 	{
 		if(S_ISREG(sb.st_mode) && sb.st_mode & 0111)
 		{
-			printf("%s is executable\n", filePath);
+			//printf("%s is executable\n", filePath);
 			return 0;
 		}
 		return -2;
@@ -305,10 +420,10 @@ int set_write(int* wpipe)
 }
 
 
-int execFile(char * cmd, char * args[], int* rpipe, int* wpipe)
+int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
 {
 	pid_t cpid;
-	int i=0;
+	
 	cpid = fork();
 	
 	if(cpid < 0)
@@ -332,7 +447,6 @@ int execFile(char * cmd, char * args[], int* rpipe, int* wpipe)
 	}
 	else								// Parent
 	{
-		//wait(0);							// Wait for fpid, command to complete
 		return 0;
 	}
 	
@@ -342,19 +456,72 @@ int execFile(char * cmd, char * args[], int* rpipe, int* wpipe)
 
 //Find the path of the command in PATH env variable and execute
 //
-int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe)
+int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
 {
 	char *PATH = "/bin:/usr/bin";
 	char paths[10][256];
+	char *path;
 	char cfp[256]; 							// full path of cmd
-	int pn=0,i,r1;
+	int pn=0,i,builtin=1;
 	
-	//Parse PATH and get individual paths
+	if(cmd==NULL)
+		printf("Error: No word entered\n");
+    else if(strcmp(cmd,"dir") == 0)
+        get_dir(cmd);
+    else if(strcmp(cmd,"bye") == 0)
+        exit(0);
+    else if(strcmp(cmd,"cd")==0)
+    {
+        struct passwd *pw = getpwuid(getuid());
+        const char *homedir = pw->pw_dir;
+        if(chdir(homedir) == 0)
+            printf("Now on '%s'\n",homedir);
+			
+		path = get_path(args[1]);
+        if(chdir(path) !=0)
+			printf("\nInvalid Path\n");
+    }
+    else if(strncmp(cmd,"~",1) == 0)
+    {
+        printf("Enter Expansion");
+        char *expansion = tilde_expansion(cmd);
+        printf("Directory is: %s\n",expansion);
+    }
+    else if( strcmp(cmd,"printenv") == 0 )						// Juned : Call to print the Environment Variables
+    { 
+    	linkedlist_print(&node_head_env); 							// print the Env linkedlist
+    }
+    else if( strcmp(cmd,"alias") == 0 )						// Juned : Call to print the Aliases
+    { 
+    	linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
+    }
+    else if( strcmp(cmd,"unset")==0 )
+    {
+    	if(args[1] == NULL)
+		{    
+			printf("\nPlease enter a Variable Name to unset\n");
+			return;
+		}
+		printf("Trying to Delete....\n");
+		printf("%s\n", linkedlist_delete_node(&node_head_env, args[1])); //pop the linkedlist's head
+		 	
+    }
+	else
+	{
+		builtin=0;
+	}
+	
+	if(builtin)
+	{
+		return 0;
+	}
+	//TODO: Parse PATH and get individual paths
 	strcpy(paths[0],"/usr/bin");
 	strcpy(paths[1],"/bin");
 	strcpy(paths[2],"../../bin");
 	pn=3;
 	
+	strcpy(cfp,"");
 	for(i=0;i<pn;i++)
 	{
 		strcat(cfp,paths[i]);
@@ -366,22 +533,81 @@ int findAndExecute(char *cmd, char*args[], int* rpipe, int* wpipe)
 			break;
 		}
 		//else
-		//	printf("%s cannot be found or is not an executable\n",cfp);
+			//printf("%s cannot be found or is not an executable\n",cfp);
 			
 		strcpy(cfp,"");
 	}
 	if(strlen(cfp)==0)
 	{
-		printf("%s: command not found \n",cmd);
+		printf("Command not found: %s \n",cmd);
 		return -1;
 	}
-	printf("Executing command: %s \n",cfp);
-		
-	execFile(cfp,args,rpipe,wpipe);
+	//printf("Executing command: %s \n",cfp);
 	
-	return 0;
+	execCmd(cfp,args,rpipe,wpipe);
+	
+	return 0;	
 }
 
+void execCmdLine()
+{
+	int rpipe[2], wpipe[2];
+	int i;
+
+	//Basic Case, single command and no redir
+	if(cmdLine.commandCnt==1 && !cmdLine.inFile && !cmdLine.outFile && !cmdLine.errFile) 
+	{
+		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,NULL);
+		//wait();
+	}
+	
+	//Multiple commands needing pipe
+	if(cmdLine.commandCnt>1)
+	{
+		// create the first output pipe
+		pipe(wpipe);
+		// first child takes input from somewhere else
+		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,wpipe);
+		
+		// output pipe becomes input for the next process.
+		rpipe[0] = wpipe[0];
+		rpipe[1] = wpipe[1];
+
+		// chain all but the first and last children
+		for(i = 1; i < cmdLine.commandCnt - 1; i++)
+		{
+			pipe(wpipe); // make the next output pipe
+			findAndExecCmd(cmdLine.commands[i]->cmd,cmdLine.commands[i]->argv,rpipe, wpipe);
+			close(rpipe[0]); // both ends are attached, close them on parent
+			close(rpipe[1]);
+			rpipe[0] = wpipe[0]; // output pipe becomes input pipe
+			rpipe[1] = wpipe[1];
+		}
+
+		// fork the last one, its output goes somewhere else
+		findAndExecCmd(cmdLine.commands[i]->cmd,cmdLine.commands[i]->argv,rpipe,NULL);
+		close(rpipe[0]);
+		close(rpipe[1]);
+		/*
+		for(i = 0; i < cmdLine.commandCnt; i++)
+		{
+			wait(); 	//Wait for all commands to complete
+		}
+		*/
+	}
+	
+	//sleep(1);
+}
+
+void processCmdLine()
+{
+	//printCmdline();
+	execCmdLine();
+	cmdLine.commandCnt=0; 			//TODO: Free executed commands.
+	sleep(1);
+}
+
+//--------------------------------- Varun Functions end -----------------------------//
 
 // Juned Functions 
 
@@ -508,6 +734,3 @@ int linkedlist_find(Node **node_head, linkedlist_data k)
     }
     return 0;
 }
-
-
-

@@ -10,7 +10,7 @@
 #include "nutty.h"    /* declarations of external variables */
 #include "funcs.h"    /* declarations of functions declared in support.c */
 
-    int YaccDebugFlag = 1;
+    int YaccDebugFlag = 0;
     void YaccDebug();
 %}
 %union  {
@@ -57,51 +57,60 @@
 command :	command2 EOL
 			{
 			    /*YaccDebug("command2 EOL");*/
+				processCmdLine();
 			    YYACCEPT;
 			}
 	|	command2 pipe_list EOL
 			{
 			    YaccDebug("command2 pipe_list EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
 	|	command2 input EOL
 			{
 			    YaccDebug("command2 input EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
 	|	command2 output EOL
 			{
 			    YaccDebug("command2 output EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
 	|	command2 pipe_list input EOL
 			{
 			    YaccDebug("command2 pipe_list input EOL");
+				processCmdLine();
 			    YYACCEPT;			    
 			}
 	|	command2 pipe_list output EOL
 			{
 			    YaccDebug("command2 pipe_list output EOL");
+				processCmdLine();
 			    YYACCEPT;
 			}
 	|	command2 input output EOL
 			{
 			    YaccDebug("command2 input output EOL");
+				processCmdLine();
 			    YYACCEPT;
 			}
 	|	command2 pipe_list input output EOL
 			{
 			    YaccDebug("command2 pipe_list input output EOL");
+				processCmdLine();
 			    YYACCEPT;
 			}
 	|	error EOL
 			{
 			    YaccDebug("error EOL");
+				processCmdLine();
 			    YYABORT;
 			}
 	|	EOL
 			{
-			    YaccDebug("EOL");
+			    processCmdLine();
 			    YYACCEPT;
 			}
 	;
@@ -109,15 +118,19 @@ command2:      	WORD
 			{
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
-			    identify_word($1);
+			    /* identify_word($1); */
 			    /*YaccDebug("WORD");*/
+				//printf("command with no args found\n");
+				insertCommand($1,NULL,0);
 			}
 	|	WORD arg_list
 			{
 			    /* put code here to distinguish builtins */
 			    /* from builtin commands */
-			    command_with_arg($1,$2);
-			    YaccDebug("WORD arg_list");
+			    /* command_with_arg($1,$2); */
+			    /* YaccDebug("WORD arg_list"); */
+				//printf("command with args found\n");
+				insertCommand($1,NULL,0);
 			}
 	;
 pipe	:	PIPE command2
@@ -173,43 +186,48 @@ error_redir:	TWOGT WORD
 arg	: 	INTEGER
 			{
 			    YaccDebug("INTEGER");
+				//printf("Integer Argument Found!\n");
 			}
 	|	WORD
 			{
 			    YaccDebug("WORD");
+				//printf("Word Argument Found!\n");
+				addArgToCurCmd($1);
 			}
 	|	STRING
 			{
 			    YaccDebug("STRING");
+				//printf("String Argument Found!\n");
 			}
 	|	MINUS arg
 			{
 			    YaccDebug("MINUS arg");
+				//printf("Minus Argument Found!\n");
 			}
 	;
 arg_list:	arg
 			{
 			    YaccDebug("arg");
+				//printf("Argument Found in arglist!\n");
 			}
 	|	arg arg_list
 			{
 			    YaccDebug("arg_list");
+				//printf("Heres an argument list!\n");
 			}
 	;
 %%
 
 yyerror(sb1)
-
 char *sb1;
-
 {
 	fprintf(stderr, "Error detected:  %s\n", sb1);
 }
 
+
 void YaccDebug(char *sb)
 {
     if (YaccDebugFlag) {
-	fprintf(stderr, "-- %s --\n", sb);
+	//fprintf(stderr, "-- %s --\n", sb);
     }
-
 }
