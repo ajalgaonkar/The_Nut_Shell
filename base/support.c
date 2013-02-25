@@ -472,14 +472,19 @@ int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
         exit(0);
     else if(strcmp(cmd,"cd")==0)
     {
-        struct passwd *pw = getpwuid(getuid());
-        const char *homedir = pw->pw_dir;
-        if(chdir(homedir) == 0)
-            printf("Now on '%s'\n",homedir);
-			
-		path = get_path(args[1]);
-        if(chdir(path) !=0)
-			printf("\nInvalid Path\n");
+		if(args[1])
+		{
+			path = get_path(args[1]);
+			if(chdir(path) !=0)
+				printf("\nInvalid Path\n");
+		}
+		else
+		{
+			struct passwd *pw = getpwuid(getuid());
+			const char *homedir = pw->pw_dir;
+			if(chdir(homedir) == 0)
+				printf("Now on '%s'\n",homedir);
+		}			
     }
     else if(strncmp(cmd,"~",1) == 0)
     {
@@ -543,7 +548,6 @@ int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
 		return -1;
 	}
 	//printf("Executing command: %s \n",cfp);
-	
 	execCmd(cfp,args,rpipe,wpipe);
 	
 	return 0;	
