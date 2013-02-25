@@ -1,7 +1,10 @@
-/*
- *  Declare all functions called from nut.y here, and
- *  then implement them in support.c.
- */
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
  
 #ifndef dstructuresh
 #define dstructuresh
@@ -47,7 +50,7 @@ extern void setErrRedir(char *, int mode);
 extern void printCmdline();
 extern void processCmdLine();
 extern void execCmdLine();
-extern int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe);
+extern int findAndExecCmd(char *cmd, char*args[], int *rpipe, int* wpipe);
 /*---------- varun decl end ------------------*/
 
 

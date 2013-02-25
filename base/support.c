@@ -422,6 +422,7 @@ int set_write(int* wpipe)
 
 int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
 {
+	int infd,outfd;
 	pid_t cpid;
 	
 	cpid = fork();
@@ -435,11 +436,31 @@ int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
 	{
 		if(rpipe) // there's a pipe from the previous process
             set_read(rpipe);
-        // else you may want to redirect input from somewhere else for the start
+        else if(cmdLine.inFile)
+		{
+			infd = open(cmdLine.inFile, O_RDONLY);
+			if(infd!=-1)
+			{
+				dup2(infd, STDIN_FILENO);
+			}
+			cmdLine.inFile = NULL;
+		}
         
 		if(wpipe) // there's a pipe to the next process
             set_write(wpipe);
-        // else you may want to redirect out to somewhere else for the end
+        else if(cmdLine.outFile)
+		{
+			if(cmdLine.outWriteMode)
+				outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT, O_APPEND);
+			else
+				outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT);
+			
+			if(outfd!=-1)
+			{
+				dup2(outfd, STDOUT_FILENO);
+			}
+		}
+		
 		
 		//ExecV file
 		execv(cmd,args);
@@ -557,12 +578,15 @@ void execCmdLine()
 {
 	int rpipe[2], wpipe[2];
 	int i;
-
+	
 	//Basic Case, single command and no redir
-	if(cmdLine.commandCnt==1 && !cmdLine.inFile && !cmdLine.outFile && !cmdLine.errFile) 
+	if(cmdLine.commandCnt==1 ) 
 	{
+		//&& !cmdLine.inFile && !cmdLine.outFile && !cmdLine.errFile
 		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,NULL);
-		//wait();
+		cmdLine.inFile = NULL;
+		cmdLine.outFile = NULL;
+		wait();
 	}
 	
 	//Multiple commands needing pipe
@@ -572,7 +596,7 @@ void execCmdLine()
 		pipe(wpipe);
 		// first child takes input from somewhere else
 		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,wpipe);
-		
+		cmdLine.inFile = NULL;
 		// output pipe becomes input for the next process.
 		rpipe[0] = wpipe[0];
 		rpipe[1] = wpipe[1];
@@ -608,7 +632,10 @@ void processCmdLine()
 	//printCmdline();
 	execCmdLine();
 	cmdLine.commandCnt=0; 			//TODO: Free executed commands.
-	sleep(1);
+	cmdLine.inFile = NULL;
+	cmdLine.outFile = NULL;
+	cmdLine.errFile = NULL;
+	//sleep(1);
 }
 
 //--------------------------------- Varun Functions end -----------------------------//

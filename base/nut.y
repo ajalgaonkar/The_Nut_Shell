@@ -150,11 +150,13 @@ pipe_list: 	pipe
 input	: 	LESS WORD
 			{
 			    YaccDebug("LESS WORD");
+				setInputRedir($2);
 			}
 	;
 output:		output2
 			{
 			    YaccDebug("output2");
+				//setOutputRedir($1);
 			}
 	|	output2 error_redir
 			{
@@ -163,30 +165,36 @@ output:		output2
 	|	error_redir
 			{
 			    YaccDebug("error_redir");
+				//setErrRedir($1);
 			}
 	;
 output2	:	GREATER WORD
 			{
 			    YaccDebug("GREATER WORD");
+				setOutputRedir($2,0);
 			}
 	|       GTGT WORD 
 			{
 			    YaccDebug("GTGT WORD");
-    			}
+				setOutputRedir($2,1);
+    		}
 	;
 error_redir:	TWOGT WORD
 			{
 			    YaccDebug("TWOGT WORD");
+				setErrRedir($2,0);
 			}
 	|	GTAMP
 			{
 			    YaccDebug("GTAMP");
+				setErrRedir("STDOUT",1);
 			}
 	;
 arg	: 	INTEGER
 			{
 			    YaccDebug("INTEGER");
 				//printf("Integer Argument Found!\n");
+				addArgToCurCmd($1);
 			}
 	|	WORD
 			{
@@ -198,11 +206,13 @@ arg	: 	INTEGER
 			{
 			    YaccDebug("STRING");
 				//printf("String Argument Found!\n");
+				addArgToCurCmd($1);
 			}
 	|	MINUS arg
 			{
 			    YaccDebug("MINUS arg");
 				//printf("Minus Argument Found!\n");
+				
 			}
 	;
 arg_list:	arg
