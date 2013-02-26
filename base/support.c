@@ -431,6 +431,66 @@ void clearCmdLine()
 }
 
 
+char ** getPATHenv(int *cnt)
+{
+	char *PATH;
+	char **paths;
+	char *tpath;
+	int i=0,j=0,k=0;
+	
+	//PATH = "/bin:/usr/bin:/usr/sbin";
+	PATH = alias_find(&node_head_env,"PATH");
+	if(strcmp(PATH,"PATH")==0)
+	{
+		//printf("Warning: PATH not set\n");
+		return NULL;
+	}
+	//printf("Using PATH=%s\n",PATH);
+	
+	while(PATH[i]!='\0')
+	{
+		if(PATH[i]==':')
+			j++;
+		i++;
+	}
+	k=++j;
+	
+	paths = (char **) malloc(k * sizeof(char*));
+	tpath = (char *) malloc(strlen(PATH) * sizeof(char));
+	
+	i=j=k=0;
+	while(1)
+	{
+		if(PATH[i]==':' || PATH[i]=='\0')
+		{
+			tpath[j]='\0';
+			j=0;
+			paths[k] = (char *) malloc(strlen(tpath)*sizeof(char));
+			strcpy(paths[k],tpath);
+			k++;
+		}
+		else
+		{
+			tpath[j]=PATH[i];
+			j++;
+		}
+		if(PATH[i]=='\0')
+		{
+			break;
+		}
+		i++;
+	}
+	
+	//for(i=0;i<k;i++)
+	//{
+	//	printf("%d-%s\n",i,paths[i]);
+	//}
+	*cnt = k;
+	return paths;
+}
+
+
+
 //Returns  0 if file found and is executable
 //Returns -1 if file is not found 
 //Returns -2 if file is but not executable
@@ -531,8 +591,8 @@ int execCmd(char * cmd, char **args, int* rpipe, int* wpipe, int infd, int outfd
 //
 int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
 {
-	char *PATH = "/bin:/usr/bin";
-	char paths[10][256];
+	//char *PATH = "/bin:/usr/bin";
+	char **paths;
 	char *path;
 	char cfp[256]; 							// full path of cmd
 	int pn=0,i,builtin=1;
@@ -652,11 +712,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 	}
 	else		//Find the cmd in PATH variable
 	{
-		//TODO: Parse PATH and get individual paths
-		strcpy(paths[0],"/usr/bin");
-		strcpy(paths[1],"/bin");
-		strcpy(paths[2],"../../bin");
-		pn=3;
+		paths = getPATHenv(&pn);
 		
 		strcpy(cfp,"");
 		for(i=0;i<pn;i++)
