@@ -152,6 +152,9 @@ char *tilde_expansion(char *tilde)
             char *temp = tilde;
             char *temp2 = tilde;
             char user[20];
+	    char temp1[50];
+	    char temp3[50];
+	    char *path_final;
             int i = 0;
             char *path;
             char *path2 = strpbrk(temp,"/");
@@ -177,12 +180,17 @@ char *tilde_expansion(char *tilde)
                     }
                     char *user_dir = pw->pw_dir;
                     printf("\n%s\n",temp);
-                    path = strcat(user_dir,path2);
-                    printf("\n..%s..\n",path);
-                    return(path);
+		    strcpy(temp1,user_dir);
+		    strcpy(temp3,path2);
+                    path_final = strcat(temp1,temp3);
+                    printf("\n..%s..\n",path_final);
+                    return(path_final);
                 }
-                else
-                return(strcat(Home_Dir,path2));
+                else{
+		strcpy(temp1,Home_Dir);
+		strcpy(temp3,path2);
+                return(strcat(temp1,temp3));
+		}
             }
             else
             {
