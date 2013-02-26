@@ -106,11 +106,11 @@ char *tilde_expansion(char *tilde)
                         return(".");
                     }
                     char *user_dir = pw->pw_dir;
-                    printf("\n%s\n",temp);
+                    //printf("\n%s\n",temp);
 		    strcpy(temp1,user_dir);
 		    strcpy(temp3,path2);
                     path_final = strcat(temp1,temp3);
-                    printf("\n..%s..\n",path_final);
+                    //printf("\n..%s..\n",path_final);
                     return(path_final);
                 }
                 else{
@@ -127,7 +127,7 @@ char *tilde_expansion(char *tilde)
                     return(".");
                 }
                 char *user_dir = pw->pw_dir;
-                printf("\n..%s..\n",user_dir);
+                //printf("\n..%s..\n",user_dir);
                 return(user_dir);
             }
        // printf("\n\n %s \n\n",temp);
