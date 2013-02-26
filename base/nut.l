@@ -55,6 +55,10 @@ F	[^\"\n\t \'\`;><=|]
     				LexDebug("MINUS ");
     				return(MINUS);
 			}
+"="			{
+    				LexDebug("EQUALS ");
+    				return(EQUALS);
+			}			
 \n			|
 ";"			{
 			yylval.sb = getsb(yytext);

@@ -136,7 +136,6 @@ char *tilde_expansion(char *tilde)
 }
 
 
-
 void get_dir(char *wrd)
 {
     char cwd[1024];
@@ -182,10 +181,7 @@ void get_dir(char *wrd)
 }
 
 
-
 /* -------------------------------- Command Execution Functions ---------------------------*/
-
-
 //Insert argument at the end of list
 void insertArgToList(char *argument, struct command *cmd)
 {
@@ -660,7 +656,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 				
 			strcpy(cfp,"");
 		}
-		if(strlen(cfp)==0)
+		if(strlen(cfp)<1)
 		{
 			printf("Command not found: %s \n",cmd);
 			return -1;
