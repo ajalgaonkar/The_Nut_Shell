@@ -9,13 +9,12 @@
 #ifndef dstructuresh
 #define dstructuresh
 
-/*---------- Varun ----------- */
-#define MAXARGS 16
-#define MAXCMDS 16
+/*---------- Structures and Methods to manage command line ----------- */
 
 /*
- * Structure for storing a sub command - a basic command with no redirections and pipes attached
- * consists of command name and argument list
+ * Structure for storing a sub command 
+ * A basic command with no redirections and pipes attached
+ * Consists of command name and argument list and arg count
  */
 struct command {
 	char *cmd;
@@ -51,7 +50,7 @@ extern void printCmdline();
 extern void processCmdLine();
 extern void execCmdLine();
 extern int findAndExecCmd(char *cmd, char*args[], int *rpipe, int* wpipe);
-/*---------- varun decl end ------------------*/
+
 
 
 extern int exit_flag;
@@ -66,7 +65,6 @@ extern char *tilde_expansion(char *tilde);
 extern char *get_path(char *arg);
 
 extern int initialize();
-extern void testFunc();
 
 #endif
 

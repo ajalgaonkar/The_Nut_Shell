@@ -248,7 +248,7 @@ void get_dir(char *wrd)
 
 
 
-/* -------------------------------- Varun Functions start ---------------------------*/
+/* -------------------------------- Command Execution Functions ---------------------------*/
 
 
 int insertCommand(char *cmd,char *args[],int argc)
@@ -436,7 +436,7 @@ int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
 	{
 		if(rpipe) // there's a pipe from the previous process
             set_read(rpipe);
-        else if(cmdLine.inFile)
+        else if(cmdLine.inFile)	//Check if Input 
 		{
 			infd = open(cmdLine.inFile, O_RDONLY);
 			if(infd!=-1)
@@ -451,9 +451,15 @@ int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
         else if(cmdLine.outFile)
 		{
 			if(cmdLine.outWriteMode)
+			{
 				outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT, O_APPEND);
+				printf("File %s opened in Append mode\n",cmdLine.outFile);
+			}
 			else
+			{
 				outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT);
+				printf("File %s opened in Write mode\n",cmdLine.outFile);
+			}
 			
 			if(outfd!=-1)
 			{
@@ -567,35 +573,46 @@ int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
 	{
 		return 0;
 	}
-	//TODO: Parse PATH and get individual paths
-	strcpy(paths[0],"/usr/bin");
-	strcpy(paths[1],"/bin");
-	strcpy(paths[2],"../../bin");
-	pn=3;
 	
-	strcpy(cfp,"");
-	for(i=0;i<pn;i++)
+	if(0)	//isPath(cmd)
 	{
-		strcat(cfp,paths[i]);
-		strcat(cfp,"/");
-		strcat(cfp,cmd);
-		if(checkIfExecutable(cfp) == 0)
-		{
-			//printf("File %s is executable \n",cfp);
-			break;
-		}
-		//else
-			//printf("%s cannot be found or is not an executable\n",cfp);
-			
+		if(checkIfExecutable(cmd)==0)
+			execCmd(cmd,args,rpipe,wpipe);
+		else
+			printf("File is not executable: %s\n",cmd);
+	}
+	else		//Find the cmd in PATH variable
+	{
+		//TODO: Parse PATH and get individual paths
+		strcpy(paths[0],"/usr/bin");
+		strcpy(paths[1],"/bin");
+		strcpy(paths[2],"../../bin");
+		pn=3;
+		
 		strcpy(cfp,"");
+		for(i=0;i<pn;i++)
+		{
+			strcat(cfp,paths[i]);
+			strcat(cfp,"/");
+			strcat(cfp,cmd);
+			if(checkIfExecutable(cfp) == 0)
+			{
+				//printf("File %s is executable \n",cfp);
+				break;
+			}
+			//else
+				//printf("%s cannot be found or is not an executable\n",cfp);
+				
+			strcpy(cfp,"");
+		}
+		if(strlen(cfp)==0)
+		{
+			printf("Command not found: %s \n",cmd);
+			return -1;
+		}
+		//printf("Executing command: %s \n",cfp);
+		execCmd(cfp,args,rpipe,wpipe);
 	}
-	if(strlen(cfp)==0)
-	{
-		printf("Command not found: %s \n",cmd);
-		return -1;
-	}
-	//printf("Executing command: %s \n",cfp);
-	execCmd(cfp,args,rpipe,wpipe);
 	
 	return 0;	
 }
