@@ -206,7 +206,10 @@ arg	: 	INTEGER
 			{
 			    YaccDebug("STRING");
 				//printf("String Argument Found!\n");
-				addArgToCurCmd($1);
+				int string_len = strlen($1);
+				char *new_arg = malloc(strlen($1));
+				strncpy(new_arg,$1,string_len-1);
+				addArgToCurCmd(new_arg);
 			}
 	|	MINUS arg
 			{

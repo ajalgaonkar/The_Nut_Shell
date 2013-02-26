@@ -474,8 +474,8 @@ static const yytype_uint8 yyrline[] =
 {
        0,    57,    57,    63,    69,    75,    81,    87,    93,    99,
      105,   111,   117,   126,   136,   141,   145,   150,   156,   161,
-     165,   171,   176,   182,   187,   193,   199,   205,   211,   218,
-     223
+     165,   171,   176,   182,   187,   193,   199,   205,   214,   221,
+     226
 };
 #endif
 
@@ -1627,12 +1627,15 @@ yyreduce:
     {
 			    YaccDebug("STRING");
 				//printf("String Argument Found!\n");
-				addArgToCurCmd((yyvsp[(1) - (1)].sb));
+				int string_len = strlen((yyvsp[(1) - (1)].sb));
+				char *new_arg = malloc(strlen((yyvsp[(1) - (1)].sb)));
+				strncpy(new_arg,(yyvsp[(1) - (1)].sb),string_len-1);
+				addArgToCurCmd(new_arg);
 			}
     break;
 
   case 28:
-#line 212 "nut.y"
+#line 215 "nut.y"
     {
 			    YaccDebug("MINUS arg");
 				//printf("Minus Argument Found!\n");
@@ -1641,7 +1644,7 @@ yyreduce:
     break;
 
   case 29:
-#line 219 "nut.y"
+#line 222 "nut.y"
     {
 			    YaccDebug("arg");
 				//printf("Argument Found in arglist!\n");
@@ -1649,7 +1652,7 @@ yyreduce:
     break;
 
   case 30:
-#line 224 "nut.y"
+#line 227 "nut.y"
     {
 			    YaccDebug("arg_list");
 				//printf("Heres an argument list!\n");
@@ -1658,7 +1661,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1662 "y.tab.c"
+#line 1665 "y.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1872,7 +1875,7 @@ yyreturn:
 }
 
 
-#line 229 "nut.y"
+#line 232 "nut.y"
 
 
 yyerror(sb1)
