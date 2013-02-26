@@ -59,7 +59,7 @@ extern void setOutputRedir(char *, int mode);
 extern void setErrRedir(char *, int mode);
 extern void printCmdline();
 extern void execCmdLine();
-extern int findAndExecCmd(char *cmd, char **args, int *rpipe, int* wpipe);
+extern int findAndExecCmd(char *cmd, char **args, int *rpipe, int* wpipe, int infd, int outfd, int errfd);
 
 
 extern int exit_flag;

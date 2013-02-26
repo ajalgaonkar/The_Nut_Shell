@@ -55,74 +55,6 @@ char *getsb(char *sb)
 }
 
 
-/* USER ajalgaonkar DEFINED SECTION */
-void identify_word(char *wrd)
-{
-	char *args[] = {"command", (char *) 0 };  //Empty args
-	
-    printf("Enter in word identify!!  %s\n",wrd);
-    if(wrd==NULL)
-		printf("Error: No word entered\n");
-    else if(strcmp(wrd,"dir") == 0)
-        get_dir(wrd);
-    else if(strcmp(wrd,"bye") == 0)
-        exit_flag = 1;
-    else if(strcmp(wrd,"cd")==0)
-    {
-        struct passwd *pw = getpwuid(getuid());
-        const char *homedir = pw->pw_dir;
-        if(chdir(homedir) == 0)
-            printf("Now on '%s'\n",homedir);
-    }
-    else if(strncmp(wrd,"~",1) == 0)
-    {
-        printf("Enter Expansion");
-        char *expansion = tilde_expansion(wrd);
-        printf("Directory is: %s\n",expansion);
-    }
-    else if( strcmp(wrd,"printenv") == 0 )						// Call to print the Environment Variables
-    { 
-    	linkedlist_print(&node_head_env); 							// print the Env linkedlist
-    }
-    else if( strcmp(wrd,"printenv") == 0 )						// Call to print the Aliases
-    { 
-    	linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
-    }
-	else if(findAndExecCmd(wrd,args,NULL,NULL))
-		printf("%s: command not found \n",wrd);
-}
-
-
-void command_with_arg(char *cmd,char *arg)
-{
-	char *args[3];
-	args[0] = cmd;
-	args[1] = arg;
-	args[2] = (char *)0;
-	
-    printf("Enter int command arg identify!! %s %s \n", args[0], args[1]);
-    if(strcmp(cmd,"cd")==0)
-    {
-        char *path;
-        path = get_path(arg);
-        if(chdir(path) !=0)
-        printf("\nInvalid Path\n");
-    }
-    else if( strcmp(cmd,"unset")==0 )
-    {
-    	if(arg == NULL)
-		{    
-			printf("\nPlease enter a Variable Name to unset\n");
-			return;
-		}
-		printf("Trying to Delete....\n");
-		printf("%s\n", linkedlist_delete_node(&node_head_env, arg)); //pop the linkedlist's head
-		 	
-    }
-	else if(findAndExecCmd(cmd,args,NULL,NULL))
-		printf("%s: command not found \n",cmd);
-}
-
 char *get_path(char *arg)
 {
     if(strncmp(arg,"~",1) == 0)
@@ -566,9 +498,8 @@ int set_write(int* wpipe)
 }
 
 //Fork and Exec the specified command with its read and write FDs defined
-int execCmd(char * cmd, char **args, int* rpipe, int* wpipe)
+int execCmd(char * cmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
 {
-	int infd,outfd;
 	pid_t cpid;
 	
 	cpid = fork();
@@ -582,36 +513,20 @@ int execCmd(char * cmd, char **args, int* rpipe, int* wpipe)
 	{
 		if(rpipe) // there's a pipe from the previous process
             set_read(rpipe);
-        else if(cmdLine.inFile)	//Check if Input 
+        else if(infd>0)
 		{
-			infd = open(cmdLine.inFile, O_RDONLY);
-			if(infd!=-1)
-			{
-				dup2(infd, STDIN_FILENO);
-			}
-			cmdLine.inFile = NULL;
+			dup2(infd, STDIN_FILENO);
 		}
         
 		if(wpipe) // there's a pipe to the next process
             set_write(wpipe);
-        else if(cmdLine.outFile)
+        else if(outfd>0)
 		{
-			if(cmdLine.outWriteMode)
-			{
-				outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT, O_APPEND);
-				printf("File %s opened in Append mode\n",cmdLine.outFile);
-			}
-			else
-			{
-				outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT);
-				printf("File %s opened in Write mode\n",cmdLine.outFile);
-			}
-			
-			if(outfd!=-1)
-			{
-				dup2(outfd, STDOUT_FILENO);
-			}
+			dup2(outfd, STDOUT_FILENO);
 		}
+		
+		if(errfd>0)
+			dup2(errfd, STDERR_FILENO);
 
 		//ExecV file
 		execv(cmd,args);
@@ -621,14 +536,12 @@ int execCmd(char * cmd, char **args, int* rpipe, int* wpipe)
 	{
 		return 0;
 	}
-	
 	return 0;
-	
 }
 
 //Find the path of the command in PATH env variable and execute
 //
-int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe)
+int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
 {
 	char *PATH = "/bin:/usr/bin";
 	char paths[10][256];
@@ -644,7 +557,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe)
         get_dir(cmd);
     else if(strcmp(cmd,"bye") == 0)
     {	
-    	printf("Thank You for using Nutty Shell. Good Bye !\n");
+    	//printf("Thank You for using Nutty Shell. Good Bye !\n");
         exit(0);
     }
     else if(strcmp(cmd,"cd")==0)
@@ -727,7 +640,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe)
 	if(0)	//isPath(cmd)
 	{
 		if(checkIfExecutable(cmd)==0)
-			execCmd(cmd,args,rpipe,wpipe);
+			execCmd(cmd,args,rpipe,wpipe,infd,outfd,errfd);
 		else
 			printf("File is not executable: %s\n",cmd);
 	}
@@ -761,7 +674,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe)
 			return -1;
 		}
 		//printf("Executing command: %s \n",cfp);
-		execCmd(cfp,args,rpipe,wpipe);
+		execCmd(cfp,args,rpipe,wpipe,infd,outfd,errfd);
 	}
 	
 	return 0;	
@@ -774,15 +687,56 @@ void execCmdLine()
 	int i;
 	struct command *tcmd;
 	argNode *tnode;
+	int infd=1,outfd=-1,errfd=-1;
+	
+	// Open files for redirection if specified
+	if(cmdLine.inFile)	//Check if Input 
+	{
+		infd = open(cmdLine.inFile, O_RDONLY);
+		if(infd<0)
+			printf("Error Opening File %s for Read",cmdLine.inFile);
+	}		
+			
+	if(cmdLine.outFile)
+	{
+		if(cmdLine.outWriteMode)
+		{
+			outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT, O_APPEND);
+			if(outfd<0)
+				printf("Error opening File %s in Append mode\n",cmdLine.outFile);
+		}
+		else
+		{
+			outfd = open(cmdLine.outFile, O_WRONLY|O_CREAT);
+			if(outfd<0)
+				printf("Error Opening File %s in Write mode\n",cmdLine.outFile);
+		}
+	}
+	
+	if(cmdLine.errFile)
+	{
+		if(cmdLine.errWriteMode)
+		{
+			errfd = open(cmdLine.errFile, O_WRONLY|O_CREAT, O_APPEND);
+			if(errfd<0)
+				printf("Error opening File %s in Append mode\n",cmdLine.errFile);
+		}
+		else
+		{
+			errfd = open(cmdLine.errFile, O_WRONLY|O_CREAT);
+			if(errfd<0)
+				printf("Error Opening File %s in Write mode\n",cmdLine.errFile);
+		}
+	}
 	
 	//Basic Case, single command
 	if(cmdLine.commandCnt==1 ) 
 	{
 		tcmd = cmdLine.cmdListHead;
-		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,NULL);
+		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,NULL,infd,outfd,errfd);
 		cmdLine.inFile = NULL;
 		cmdLine.outFile = NULL;
-		//wait();
+		wait();
 	}
 	
 	//Multiple commands needing pipe
@@ -793,7 +747,7 @@ void execCmdLine()
 		
 		tcmd = cmdLine.cmdListHead;
 		// first child takes input from somewhere else
-		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,wpipe);
+		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,wpipe,infd,outfd,errfd);
 		
 		tcmd = tcmd->nextCmd;
 		cmdLine.inFile = NULL;
@@ -805,7 +759,7 @@ void execCmdLine()
 		while(tcmd->nextCmd)
 		{
 			pipe(wpipe); // make the next output pipe
-			findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),rpipe, wpipe);
+			findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),rpipe, wpipe,infd,outfd,errfd);
 			close(rpipe[0]); // both ends are attached, close them on parent
 			close(rpipe[1]);
 			rpipe[0] = wpipe[0]; // output pipe becomes input pipe
@@ -814,13 +768,13 @@ void execCmdLine()
 		}
 
 		// fork the last one, its output goes somewhere else
-		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),rpipe,NULL);
+		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),rpipe,NULL,infd,outfd,errfd);
 		close(rpipe[0]);
 		close(rpipe[1]);
 		//
 		for(i = 0; i < cmdLine.commandCnt; i++)
 		{
-			//wait(); 	//Wait for all commands to complete
+			wait(); 	//Wait for all commands to complete
 		}
 		
 	}
