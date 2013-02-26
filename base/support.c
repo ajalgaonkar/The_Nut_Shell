@@ -628,13 +628,15 @@ int execCmd(char * cmd, char **args, int* rpipe, int* wpipe)
 
 //Find the path of the command in PATH env variable and execute
 //
-int findAndExecCmd(char *cmd, char **args, int* rpipe, int* wpipe)
+int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe)
 {
 	char *PATH = "/bin:/usr/bin";
 	char paths[10][256];
 	char *path;
 	char cfp[256]; 							// full path of cmd
 	int pn=0,i,builtin=1;
+	
+	char *cmd = alias_find(&node_head_aliases, Ocmd);				// Chec if the command is not a builtin and is an alias
 	
 	if(cmd==NULL)
 		printf("Error: No word entered\n");
@@ -831,9 +833,9 @@ void processCmdLine()
 	//sleep(1);
 }
 
-//--------------------------------- Varun Functions end -----------------------------//
+//--------------------------------- Functions end -----------------------------//
 
-// Juned Functions 
+// Linked List Functions 
 
 // Returns the lenght of the Linked_List
 int linkedlist_len(Node *node_head)
@@ -958,4 +960,21 @@ int linkedlist_find(Node **node_head, linkedlist_data k)
             node_curr = node_curr -> next;
     }
     return 0;
+}
+
+// Returns alias value if Node with k key is present in the Linked_List of Alias
+linkedlist_data alias_find(Node **node_head, linkedlist_data k)
+{
+    Node *node_curr = *node_head;
+     
+    while(node_curr)
+    {
+        if(strcmp(node_curr -> key, k) == 0) //set for numbers, modifiable
+        {
+            return node_curr -> value;
+        }
+        else
+            node_curr = node_curr -> next;
+    }
+    return k;
 }

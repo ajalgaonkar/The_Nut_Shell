@@ -23,4 +23,4 @@ extern void linkedlist_print(Node **node_head); 												// Prints all the li
 extern void linkedlist_clear(Node **node_head); 												// Clears the linkedlist of all elements
 extern void linkedlist_snoc(Node **node_head, linkedlist_data key, linkedlist_data value); 		// Appends a node
 extern int linkedlist_find(Node **node_head, linkedlist_data k); 								// Checks for an element
- 
+extern linkedlist_data alias_find(Node **node_head, linkedlist_data k);							// Returns alias value if Node with k key is present in the Linked_List of Alias
