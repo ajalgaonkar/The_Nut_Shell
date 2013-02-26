@@ -736,7 +736,7 @@ void execCmdLine()
 		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,NULL,infd,outfd,errfd);
 		cmdLine.inFile = NULL;
 		cmdLine.outFile = NULL;
-		wait();
+		//wait();
 	}
 	
 	//Multiple commands needing pipe
@@ -774,7 +774,7 @@ void execCmdLine()
 		//
 		for(i = 0; i < cmdLine.commandCnt; i++)
 		{
-			wait(); 	//Wait for all commands to complete
+			//wait(); 	//Wait for all commands to complete
 		}
 		
 	}
