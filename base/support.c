@@ -80,8 +80,8 @@ char *tilde_expansion(char *tilde)
             char *temp = tilde;
             char *temp2 = tilde;
             char user[20];
-	    char temp1[50];
-	    char temp3[50];
+	    char temp1[1000];
+	    char temp3[1000];
 	    char *path_final;
             int i = 0;
             char *path;
@@ -93,7 +93,6 @@ char *tilde_expansion(char *tilde)
 
                 if(strncmp(temp,"/",1) != 0)
                 {
-
                     while(strncmp(temp2,"/",1) != 0)
                     {
                         user[i] = *temp2;
@@ -107,11 +106,11 @@ char *tilde_expansion(char *tilde)
                         return(".");
                     }
                     char *user_dir = pw->pw_dir;
-                    //printf("\n%s\n",temp);
+                    printf("\n%s\n",temp);
 		    strcpy(temp1,user_dir);
 		    strcpy(temp3,path2);
                     path_final = strcat(temp1,temp3);
-                    //printf("\n..%s..\n",path_final);
+                    printf("\n..%s..\n",path_final);
                     return(path_final);
                 }
                 else{
@@ -128,7 +127,7 @@ char *tilde_expansion(char *tilde)
                     return(".");
                 }
                 char *user_dir = pw->pw_dir;
-                //printf("\n..%s..\n",user_dir);
+                printf("\n..%s..\n",user_dir);
                 return(user_dir);
             }
        // printf("\n\n %s \n\n",temp);
@@ -579,7 +578,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
     {
         //printf("Enter Expansion");
         char *expansion = tilde_expansion(cmd);
-        //printf("Directory is: %s\n",expansion);
+        printf("Directory is: %s\n",expansion);
     }
     else if( strcmp(cmd,"printenv") == 0 )								// Call to print the Environment Variables
     { 
