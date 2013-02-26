@@ -341,16 +341,10 @@ char ** charListToArray(argNode *head, int count)
 	{
 		if(tnode->argv)
 		{
-			char *temp_path;
-			if(strncmp(tnode->argv,"~",1) == 0){
-			    temp_path = tilde_expansion(tnode->argv);
-			    argArray[i] = (char *) malloc(strlen(temp_path)*sizeof(char));
-			    strcpy(argArray[i],temp_path);
-			}
-			else{
+			
 			argArray[i] = (char *) malloc(strlen(tnode->argv)*sizeof(char));
 			strcpy(argArray[i],tnode->argv);
-			}
+			
 		}
 		else
 		{

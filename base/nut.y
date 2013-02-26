@@ -200,7 +200,10 @@ arg	: 	INTEGER
 			{
 			    YaccDebug("WORD");
 				//printf("Word Argument Found!\n");
-				addArgToCurCmd($1);
+			    char *temp_path;
+			    if(strncmp($1,"~",1) == 0)
+			    temp_path = tilde_expansion($1);
+			    addArgToCurCmd(temp_path);
 			}
 	|	STRING
 			{
