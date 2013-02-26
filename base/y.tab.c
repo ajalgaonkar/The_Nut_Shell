@@ -1504,7 +1504,7 @@ yyreduce:
 			    /* identify_word($1); */
 			    /*YaccDebug("WORD");*/
 				//printf("command with no args found\n");
-				insertCommand((yyvsp[(1) - (1)].sb),NULL,0);
+				insertCommand((yyvsp[(1) - (1)].sb));
 			}
     break;
 
@@ -1516,7 +1516,7 @@ yyreduce:
 			    /* command_with_arg($1,$2); */
 			    /* YaccDebug("WORD arg_list"); */
 				//printf("command with args found\n");
-				insertCommand((yyvsp[(1) - (2)].sb),NULL,0);
+				insertCommand((yyvsp[(1) - (2)].sb));
 			}
     break;
 
