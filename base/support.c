@@ -16,12 +16,20 @@
 #include <pwd.h>
 
 
-/*
- *
- *  FatalError(sb):  print message and exit.
- *
- */
 
+/* 
+ *	 LinkedList Implementation
+ */ 
+Node *node_head_env = NULL; 
+Node *node_head_aliases = NULL;
+
+
+struct commandLine cmdLine;
+struct command * curCmd;
+
+/*
+ *  FatalError(sb):  print message and exit.
+ */
 void FatalError(char *sb)
 {
     int cc;
@@ -30,21 +38,9 @@ void FatalError(char *sb)
 }
 
 
-/* 
- *		Juned LinkedList Implementation
- */ 
-Node *node_head_env = NULL; 								// Juned : Global Pointer to linkedlist head
-Node *node_head_aliases = NULL;
-
-
-//Varun declarations
-struct commandLine cmdLine;
-struct command * curCmd;
 
 /*
- *
  *  getsb(sb) -- returns a new sb of length strlen(sb)
- * 
  */
 char *getsb(char *sb)
 {
@@ -259,43 +255,96 @@ void get_dir(char *wrd)
 /* -------------------------------- Command Execution Functions ---------------------------*/
 
 
-int insertCommand(char *cmd,char *args[],int argc)
+//Insert argument at the end of list
+void insertArgToList(char *argument, struct command *cmd)
+{
+	argNode *newArg = (argNode *)malloc(sizeof(argNode));
+	argNode *iNode = cmd->argList_head;
+	
+	if(argument)
+	{
+		newArg->argv = (char *)malloc(sizeof(char)*strlen(argument));
+		strcpy(newArg->argv,argument);
+	}
+	else
+		newArg->argv = NULL;
+	
+	if(!iNode) //No nodes in list
+	{
+		newArg->next = NULL;
+		cmd->argList_head=newArg;
+	}
+	else
+	{
+		while(iNode->next)
+			iNode = iNode->next;
+		newArg->next = NULL;
+		iNode->next = newArg;
+	}
+	cmd->argc++;
+}
+
+//Insert command to command list
+void insertCmdToList(struct command *newCmd)
+{
+	struct command *iCmd;
+	if(!cmdLine.cmdListHead)     //Empty List
+	{
+		newCmd->nextCmd=NULL;
+		cmdLine.cmdListHead = newCmd;
+	}
+	else
+	{
+		newCmd->nextCmd=NULL;
+		iCmd = cmdLine.cmdListHead;
+		while(iCmd->nextCmd)
+		{
+			iCmd = iCmd->nextCmd;
+		}
+		iCmd->nextCmd = newCmd;
+	}
+	cmdLine.commandCnt++;
+}
+
+/* 
+ * Creates a command with out arguments
+ * If command has arguments, it would be created in addArgToCurCmd() and 
+ * cmd itself is updated here
+ */
+
+int insertCommand(char *cmd)
 {
 	//Perform Tilde Expansion and alias resolution on command
 	int i;
 	struct command * newCmd;
+	argNode *newArg;
 	
-	if(cmdLine.commandCnt<MAXCMDS)
+	if(cmd)
 	{
-		if(!curCmd) 								//Command with no arguments comes here
+		if(!curCmd) 								//Command with no arguments are created here
 		{
 			newCmd = (struct command *)malloc(sizeof(struct command));
 			newCmd->argc = 0;
 			newCmd->cmd = cmd;
-			newCmd->argv[newCmd->argc] = cmd;
-			newCmd->argc++;
-			for(i=0;i<argc;i++)
-			{
-				newCmd->argv[newCmd->argc] = args[i];
-				newCmd->argc++;
-			}
-			newCmd->argv[newCmd->argc] = NULL;
-			newCmd->argc++;
+			newCmd->argList_head = NULL;
 			
-			cmdLine.commands[cmdLine.commandCnt] = newCmd;
-			cmdLine.commandCnt++;
+			insertArgToList(cmd,newCmd);
+			insertArgToList(NULL,newCmd);
+			
+			insertCmdToList(newCmd);
 		}
 		else										//Commands with arguments already parsed comes here
 		{
 			curCmd->cmd = cmd;
-			curCmd->argv[0]=cmd;
+			insertArgToList(NULL,curCmd);
 			
-			for(i=0;i<argc;i++)						//TODO: Boundry Check
-			{
-				curCmd->argv[curCmd->argc-1] = args[i];
-				curCmd->argv[curCmd->argc] = NULL;
-				curCmd->argc++;
-			}
+			//Insert command to front of arg list. arg[0]
+			newArg = (argNode *)malloc(sizeof(argNode));
+			newArg->argv = (char *)malloc(sizeof(char)*strlen(cmd));
+			strcpy(newArg->argv,cmd);
+			newArg->next=curCmd->argList_head;
+			curCmd->argList_head=newArg;
+			curCmd->argc++;
 		}
 		
 		curCmd = NULL;
@@ -305,55 +354,108 @@ int insertCommand(char *cmd,char *args[],int argc)
 	return -1;
 }
 
+/*
+ * Adds an argument to the current command if one exists
+ * If current command doesnt exist, will create a NULL cmd,
+ * which is updated later in insertCommand()
+ */
 void addArgToCurCmd(char *arg)
 {
-	if(curCmd && curCmd->argc<MAXARGS)
+	if(curCmd)
 	{
-		curCmd->argv[curCmd->argc-1] = arg;
-		curCmd->argv[curCmd->argc] = NULL;
-		curCmd->argc++;
+		insertArgToList(arg,curCmd);
 	}
 	else if(!curCmd) 
 	{
 		curCmd = (struct command *)malloc(sizeof(struct command));
-		curCmd->argc = 1;
-		curCmd->argv[curCmd->argc] = arg;
-		curCmd->argc++;
-		curCmd->argv[curCmd->argc] = NULL;
-		curCmd->argc++;
+		curCmd->cmd=NULL;
+		curCmd->argc = 0;
+		curCmd->argList_head = NULL;
+		insertCmdToList(curCmd);
 		
-		cmdLine.commands[cmdLine.commandCnt] = curCmd; //TODO: boundry check
-		cmdLine.commandCnt++;
+		insertArgToList(arg,curCmd);
 	}
 }
 
+// Sets a file name for input redirection
 void setInputRedir(char *fn)
 {
 	cmdLine.inFile = fn;	
 }
 
+// Sets a file name for output redirection
 void setOutputRedir(char *fn, int mode)
 {
 	cmdLine.outFile = fn;
 	cmdLine.outWriteMode = mode;
 }
+
+// Sets a file name for error redirection
 void setErrRedir(char *fn, int mode)
 {
 	cmdLine.errFile = fn;
 	cmdLine.errWriteMode = mode;
 }
 
+//Converts the linked kist of arguments to string array
+char ** charListToArray(argNode *head, int count) 
+{
+	argNode *tnode;
+	char **argArray;
+	int i=0,n;
+	
+	argArray = (char **) malloc(count * sizeof(char*));
+	tnode = head;
+	while(tnode)
+	{
+		if(tnode->argv)
+		{
+			argArray[i] = (char *) malloc(strlen(tnode->argv)*sizeof(char));
+			strcpy(argArray[i],tnode->argv);
+		}
+		else
+		{
+			argArray[i]=NULL;
+		}
+		tnode = tnode->next;
+		i++;
+	}
+	n=i;
+	
+	return argArray;
+}
 
-
+// Prints the parsed command line stored in the structure
 void printCmdline()
 {
 	int i=0,j=0;
+	argNode *tnode=NULL;
+	struct command *tcmd;
+	char **argArray;
+	
 	printf("\nNumber of commands: %d\n",cmdLine.commandCnt);
-	for(i=0;i<cmdLine.commandCnt;i++)
-	{	
-		printf("\nCMD%d: \"%s\" ARG#=%d\n",i+1,cmdLine.commands[i]->cmd,cmdLine.commands[i]->argc-2);
-		for(j=1;j<cmdLine.commands[i]->argc-1;j++)
-			printf("\tARG%d: \"%s\" \n",j,cmdLine.commands[i]->argv[j]);
+	tcmd = cmdLine.cmdListHead;
+	
+	while(tcmd)
+	{
+		printf("\nCMD%d: \"%s\" ARG#=%d\n",i+1,tcmd->cmd,tcmd->argc-2);
+		tnode = tcmd->argList_head;
+		j=0;
+		argArray = charListToArray(tnode,tcmd->argc);
+		for(j=0;j<tcmd->argc;j++)
+		{
+			printf("\tARG%d: \"%s\" \n",j,argArray[j]);
+		}
+		/*
+		while(tnode->next)
+		{
+			printf("\tARG%d: \"%s\" \n",j,tnode->argv);
+			j++;
+			tnode = tnode->next;
+		}
+		*/
+		tcmd = tcmd->nextCmd;
+		i++;
 	}
 	printf("\n");
 	
@@ -370,6 +472,33 @@ void printCmdline()
 	else if(cmdLine.errFile)
 		printf("Error Stream of command line will be Appended to file: %s\n",cmdLine.errFile);
 
+}
+
+//Resets the data structure and frees the Command Line memory
+void clearCmdLine()
+{
+	argNode *tnode,*fnode;
+	struct command *tcmd,*fcmd;
+	
+	tcmd = cmdLine.cmdListHead;
+	while(tcmd)
+	{
+		tnode = tcmd->argList_head;
+		while(tnode)
+		{
+			fnode = tnode;
+			tnode = tnode->next;
+			free(fnode);
+		}
+		fcmd = tcmd;
+		tcmd = tcmd->nextCmd;
+		free(fcmd);
+	}
+	cmdLine.cmdListHead = NULL;
+	cmdLine.commandCnt = 0;
+	cmdLine.inFile = NULL;
+	cmdLine.outFile = NULL;
+	cmdLine.errFile = NULL;
 }
 
 
@@ -427,8 +556,8 @@ int set_write(int* wpipe)
 	return 0;
 }
 
-
-int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
+//Fork and Exec the specified command with its read and write FDs defined
+int execCmd(char * cmd, char **args, int* rpipe, int* wpipe)
 {
 	int infd,outfd;
 	pid_t cpid;
@@ -474,8 +603,7 @@ int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
 				dup2(outfd, STDOUT_FILENO);
 			}
 		}
-		
-		
+
 		//ExecV file
 		execv(cmd,args);
 		exit(0);
@@ -491,7 +619,7 @@ int execCmd(char * cmd, char * args[], int* rpipe, int* wpipe)
 
 //Find the path of the command in PATH env variable and execute
 //
-int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
+int findAndExecCmd(char *cmd, char **args, int* rpipe, int* wpipe)
 {
 	char *PATH = "/bin:/usr/bin";
 	char paths[10][256];
@@ -627,14 +755,17 @@ int findAndExecCmd(char *cmd, char*args[], int* rpipe, int* wpipe)
 
 void execCmdLine()
 {
+
 	int rpipe[2], wpipe[2];
 	int i;
+	struct command *tcmd;
+	argNode *tnode;
 	
-	//Basic Case, single command and no redir
+	//Basic Case, single command
 	if(cmdLine.commandCnt==1 ) 
 	{
-		//&& !cmdLine.inFile && !cmdLine.outFile && !cmdLine.errFile
-		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,NULL);
+		tcmd = cmdLine.cmdListHead;
+		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,NULL);
 		cmdLine.inFile = NULL;
 		cmdLine.outFile = NULL;
 		//wait();
@@ -645,34 +776,39 @@ void execCmdLine()
 	{
 		// create the first output pipe
 		pipe(wpipe);
+		
+		tcmd = cmdLine.cmdListHead;
 		// first child takes input from somewhere else
-		findAndExecCmd(cmdLine.commands[0]->cmd,cmdLine.commands[0]->argv,NULL,wpipe);
+		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,wpipe);
+		
+		tcmd = tcmd->nextCmd;
 		cmdLine.inFile = NULL;
 		// output pipe becomes input for the next process.
 		rpipe[0] = wpipe[0];
 		rpipe[1] = wpipe[1];
 
 		// chain all but the first and last children
-		for(i = 1; i < cmdLine.commandCnt - 1; i++)
+		while(tcmd->nextCmd)
 		{
 			pipe(wpipe); // make the next output pipe
-			findAndExecCmd(cmdLine.commands[i]->cmd,cmdLine.commands[i]->argv,rpipe, wpipe);
+			findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),rpipe, wpipe);
 			close(rpipe[0]); // both ends are attached, close them on parent
 			close(rpipe[1]);
 			rpipe[0] = wpipe[0]; // output pipe becomes input pipe
 			rpipe[1] = wpipe[1];
+			tcmd = tcmd->nextCmd;
 		}
 
 		// fork the last one, its output goes somewhere else
-		findAndExecCmd(cmdLine.commands[i]->cmd,cmdLine.commands[i]->argv,rpipe,NULL);
+		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),rpipe,NULL);
 		close(rpipe[0]);
 		close(rpipe[1]);
-		/*
+		//
 		for(i = 0; i < cmdLine.commandCnt; i++)
 		{
 			wait(); 	//Wait for all commands to complete
 		}
-		*/
+		
 	}
 	
 	//sleep(1);
@@ -682,10 +818,7 @@ void processCmdLine()
 {
 	//printCmdline();
 	execCmdLine();
-	cmdLine.commandCnt=0; 			//TODO: Free executed commands.
-	cmdLine.inFile = NULL;
-	cmdLine.outFile = NULL;
-	cmdLine.errFile = NULL;
+	clearCmdLine();
 	//sleep(1);
 }
 

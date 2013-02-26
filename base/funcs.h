@@ -12,16 +12,27 @@
 /*---------- Structures and Methods to manage command line ----------- */
 
 /*
+ * Structure to maintain list of arguments of a command
+ */
+typedef struct arg_node argNode; 
+struct arg_node 
+{
+    char *argv;
+    argNode *next;
+};
+
+/*
  * Structure for storing a sub command 
  * A basic command with no redirections and pipes attached
  * Consists of command name and argument list and arg count
+ * Also has nextCmd pointer to maintain the list of commands
  */
 struct command {
 	char *cmd;
 	int argc;
-	char *argv[MAXARGS];
+	argNode *argList_head;
+	struct command *nextCmd;
 };
-
 
 /*
  * Structure stores all the sub commands in the command line in the order specified 
@@ -29,7 +40,7 @@ struct command {
  */
 struct commandLine {
 	int commandCnt;					// Total number of sub commands in the command line
-	struct command *commands[MAXCMDS];		// commands in the command line and its arguments
+	struct command *cmdListHead;		// commands in the command line and its arguments
 	
 	char * inFile;		//File name if input needs to be redirected
 	char * outFile;		//File name if output redirection is specified
@@ -41,16 +52,14 @@ struct commandLine {
 extern struct commandLine cmdLine;
 extern struct command * curCmd;
 
-extern int insertCommand(char *cmd,char *args[],int argc);
+extern int insertCommand(char *cmd);
 extern void addArgToCurCmd(char *arg);
 extern void setInputRedir(char *);
 extern void setOutputRedir(char *, int mode);
 extern void setErrRedir(char *, int mode);
 extern void printCmdline();
-extern void processCmdLine();
 extern void execCmdLine();
-extern int findAndExecCmd(char *cmd, char*args[], int *rpipe, int* wpipe);
-
+extern int findAndExecCmd(char *cmd, char **args, int *rpipe, int* wpipe);
 
 
 extern int exit_flag;

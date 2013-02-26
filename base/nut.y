@@ -121,7 +121,7 @@ command2:      	WORD
 			    /* identify_word($1); */
 			    /*YaccDebug("WORD");*/
 				//printf("command with no args found\n");
-				insertCommand($1,NULL,0);
+				insertCommand($1);
 			}
 	|	WORD arg_list
 			{
@@ -130,7 +130,7 @@ command2:      	WORD
 			    /* command_with_arg($1,$2); */
 			    /* YaccDebug("WORD arg_list"); */
 				//printf("command with args found\n");
-				insertCommand($1,NULL,0);
+				insertCommand($1);
 			}
 	;
 pipe	:	PIPE command2
