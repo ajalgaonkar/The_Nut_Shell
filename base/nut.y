@@ -216,10 +216,15 @@ arg	: 	INTEGER
 			{
 			    YaccDebug("WORD");
 				//printf("Word Argument Found!\n");
+				
 			    char *temp_path;
 			    if(strncmp($1,"~",1) == 0)
-			    temp_path = tilde_expansion($1);
-			    addArgToCurCmd(temp_path);
+				{
+					temp_path = tilde_expansion($1);
+					addArgToCurCmd(temp_path);
+				}
+				else
+				    addArgToCurCmd($1);
 			}
 	|	STRING
 			{
@@ -239,6 +244,7 @@ arg	: 	INTEGER
 			}
 	|	EQUALS
 			{
+				printf("Found Equals\n");
 				//addArgToCurCmd("=");
 			}
 	;
