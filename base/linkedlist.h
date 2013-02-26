@@ -13,6 +13,7 @@ struct linkedlist 																				//linkedlist structure format
 {
     linkedlist_data key;
     linkedlist_data value;
+    int local;
     Node *next;
 };
  
@@ -23,4 +24,6 @@ extern void linkedlist_print(Node **node_head); 												// Prints all the li
 extern void linkedlist_clear(Node **node_head); 												// Clears the linkedlist of all elements
 extern void linkedlist_snoc(Node **node_head, linkedlist_data key, linkedlist_data value); 		// Appends a node
 extern int linkedlist_find(Node **node_head, linkedlist_data k); 								// Checks for an element
-extern linkedlist_data alias_find(Node **node_head, linkedlist_data k);							// Returns alias value if Node with k key is present in the Linked_List of Alias
+extern linkedlist_data linkedlist_value(Node **node_head, linkedlist_data k);					// Returns alias value if Node with k key is present in the Linked_List of Alias
+extern int linkedlist_export(Node **node_head, linkedlist_data key);							// Updates the 'local' flag for the Node with given key
+extern linkedlist_data linkedlist_getNV(Node **node_head, linkedlist_data key);					// Returns the name=value pair char*

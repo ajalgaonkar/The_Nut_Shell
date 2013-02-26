@@ -611,7 +611,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 	char cfp[256]; 							// full path of cmd
 	int pn=0,i,builtin=1;
 	
-	char *cmd = alias_find(&node_head_aliases, Ocmd);				// Chec if the command is not a builtin and is an alias
+	char *cmd = linkedlist_value(&node_head_aliases, Ocmd);				// Chec if the command is not a builtin and is an alias
 	
 	if(cmd==NULL)
 		printf("Error: No word entered\n");
@@ -686,8 +686,26 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
     		linkedlist_insert(&node_head_aliases, args[1],args[2]); 			// Insert the Word,String Aliases Pair
     	}
     	else
-    		linkedlist_print(&node_head_aliases); 							// print the Aliases linkedlist
+    		linkedlist_print(&node_head_aliases); 								// print the Aliases linkedlist
     		//printf("\nInvalid command to set Aliases.\n");
+    }
+    else if( strcmp(cmd,"export") == 0 )										// To export a given name to Environment
+    {
+    	if(args[1] != NULL)
+    	{
+    		if(linkedlist_export(&node_head_env, args[1]))						// Updates the 'local' flag to 1
+    		{
+    			char* nv_pair = linkedlist_getNV(&node_head_env, args[1]);
+    			if(nv_pair != NULL )											// putenv(name=value)
+    				putenv(nv_pair);											// putenv(name=value)
+    			else
+    				printf("Name Value Error.\n");
+    		}
+    		else
+	    		printf("No such Variable found.\n");
+    	}
+    	else
+    		printf("\nEnter word to export\n");
     }
 	else
 	{
@@ -850,7 +868,7 @@ void processCmdLine()
 
 //---------------------------------Command Functions end -----------------------------//
 
-// Linked List Functions 
+//--------------------------------- Linked List Functions ----------------------------// 
 
 // Returns the lenght of the Linked_List
 int linkedlist_len(Node *node_head)
@@ -865,7 +883,46 @@ int linkedlist_len(Node *node_head)
     }
     return len;
 }
+
+// Returns the name=value pair char*
+linkedlist_data linkedlist_getNV(Node **node_head, linkedlist_data key)
+{
+	if(linkedlist_find(node_head, key)) {
+		Node *node_curr = *node_head;
+	
+		do {
+			if(strcmp(node_curr -> key, key) == 0) {
+				char *result = malloc(strlen(node_curr -> key) + strlen(node_curr -> value)+2);
+				strcat (result,node_curr -> key);
+				strcat (result,"=");
+				strcat (result,node_curr -> value);
+				return result;
+			}
+			node_curr = node_curr -> next;
+		}while(node_curr);
+	}
+	return NULL;
+}
  
+// Updates the 'local' flag for the Linked_List 
+int linkedlist_export(Node **node_head, linkedlist_data key)
+{
+	if(linkedlist_find(node_head, key)) {
+		Node *node_curr = *node_head;
+	
+		do {
+			if(strcmp(node_curr -> key, key) == 0) {
+				node_curr -> local = 1;
+				return 1;
+			}
+			node_curr = node_curr -> next;
+		}while(node_curr);
+	}
+	return 0;
+	//printf("No such Variable found.\n");
+	
+}
+
 
 // Inserts Key,Value into the Linked_List 
 void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data value)
@@ -874,7 +931,16 @@ void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data va
 		Node *node_curr = *node_head;
 	
 		do {
-			if(strcmp(node_curr -> key, key) == 0) {
+			if(strcmp(node_curr -> key, key) == 0) 
+			{
+				if(node_curr -> local) {											// Check only for the environmental variable flag
+					node_curr -> value = value;
+					char* nv_pair = linkedlist_getNV(&node_head_env, key);
+    				if(nv_pair != NULL )											// putenv(name=value)
+    					putenv(nv_pair);											// putenv(name=value)
+    				return;
+					
+				}
 				node_curr -> value = value;
 				return;
 			}
@@ -886,6 +952,7 @@ void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data va
 	     
 	    node_new -> key = key;
 	    node_new -> value = value;
+	    node_new -> local = 0;
 	    node_new -> next = *node_head;
 	    *node_head = node_new;
 	}
@@ -928,7 +995,7 @@ void linkedlist_print(Node **node_head)
     {
         while(node_curr)
         {
-            printf("%s = %s\n", node_curr -> key, node_curr -> value); //set for integers, modifiable
+            printf("%s = %s \n", node_curr -> key, node_curr -> value); //set for integers, modifiable
             node_curr = node_curr -> next;
         }
         putchar('\n');
@@ -978,7 +1045,7 @@ int linkedlist_find(Node **node_head, linkedlist_data k)
 }
 
 // Returns alias value if Node with k key is present in the Linked_List of Alias
-linkedlist_data alias_find(Node **node_head, linkedlist_data k)
+linkedlist_data linkedlist_value(Node **node_head, linkedlist_data k)
 {
     Node *node_curr = *node_head;
      
