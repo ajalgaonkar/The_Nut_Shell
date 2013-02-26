@@ -69,7 +69,7 @@ char *tilde_expansion(char *tilde)
 {
     int len = strlen(tilde);
     int i =0;
-    printf("\nExpansion for USER %s\n", tilde);
+    //printf("\nExpansion for USER %s\n", tilde);
     if(len == 1)
     {
         return(Home_Dir);
@@ -344,7 +344,6 @@ char ** charListToArray(argNode *head, int count)
 		{
 			char *temp_path;
 			if(strncmp(tnode->argv,"~",1) == 0){
-			    printf("TEST PRINT: %s\n", tnode->argv);
 			    temp_path = tilde_expansion(tnode->argv);
 			    argArray[i] = (char *) malloc(strlen(temp_path)*sizeof(char));
 			    strcpy(argArray[i],temp_path);
@@ -578,9 +577,9 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
     }
     else if(strncmp(cmd,"~",1) == 0)
     {
-        printf("Enter Expansion");
+        //printf("Enter Expansion");
         char *expansion = tilde_expansion(cmd);
-        printf("Directory is: %s\n",expansion);
+        //printf("Directory is: %s\n",expansion);
     }
     else if( strcmp(cmd,"printenv") == 0 )								// Call to print the Environment Variables
     { 
