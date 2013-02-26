@@ -643,7 +643,10 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe)
     else if(strcmp(cmd,"dir") == 0)
         get_dir(cmd);
     else if(strcmp(cmd,"bye") == 0)
+    {	
+    	printf("Thank You for using Nutty Shell. Good Bye !\n");
         exit(0);
+    }
     else if(strcmp(cmd,"cd")==0)
     {
 		if(args[1])
@@ -833,7 +836,7 @@ void processCmdLine()
 	//sleep(1);
 }
 
-//--------------------------------- Functions end -----------------------------//
+//---------------------------------Command Functions end -----------------------------//
 
 // Linked List Functions 
 
