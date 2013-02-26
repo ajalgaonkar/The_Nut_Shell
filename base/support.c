@@ -528,6 +528,20 @@ int checkIfDir(char *dirPath)
 	return -1;
 }
 
+int isPath(char * cmd)
+{
+	int flag=0,i=0;
+	while(cmd[i]!='\0')
+	{
+		if(cmd[i]=='/')
+		{
+			flag = 1;
+			break;
+		}
+		i++;
+	}
+	return flag;
+}
 
 int set_read(int* rpipe)
 {
@@ -685,7 +699,7 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 		return 0;
 	}
 	
-	if(0)	//isPath(cmd)
+	if(isPath(cmd))			//If command is a path.
 	{
 		if(checkIfExecutable(cmd)==0)
 			execCmd(cmd,args,rpipe,wpipe,infd,outfd,errfd);
