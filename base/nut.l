@@ -89,6 +89,6 @@ F	[^\"\n\t \'\`;><=|]
 void LexDebug(char *sb)
 {
     if (LexDebugFlag) {
-    	fprintf(stderr, sb);
+    	//fprintf(stderr, sb);
     }
 }

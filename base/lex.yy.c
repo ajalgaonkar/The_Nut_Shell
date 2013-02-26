@@ -1877,7 +1877,7 @@ void yyfree (void * ptr )
 void LexDebug(char *sb)
 {
     if (LexDebugFlag) {
-    	fprintf(stderr, sb);
+    	//fprintf(stderr, sb);
     }
 }
 
