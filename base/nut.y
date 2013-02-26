@@ -32,6 +32,7 @@
 %token LESS
 %token <sb> LIST
 %token MINUS
+%token EQUALS
 %token PATH
 %token PIPE
 %token PROMPT
@@ -132,6 +133,21 @@ command2:      	WORD
 				//printf("command with args found\n");
 				insertCommand($1);
 			}
+	|	WORD EQUALS WORD
+			{
+				addArgToCurCmd($1);
+				addArgToCurCmd($3);
+				insertCommand("setenv");
+			}
+	|	WORD EQUALS STRING
+			{
+				addArgToCurCmd($1);
+				int string_len = strlen($3);
+				char *new_arg = malloc(strlen($3));
+				strncpy(new_arg,$3,string_len-1);
+				addArgToCurCmd(new_arg);
+				insertCommand("setenv");
+			}
 	;
 pipe	:	PIPE command2
 			{
@@ -215,7 +231,12 @@ arg	: 	INTEGER
 			{
 			    YaccDebug("MINUS arg");
 				//printf("Minus Argument Found!\n");
+				addArgToCurCmd(strcat("-",$2));
 				
+			}
+	|	EQUALS
+			{
+				//addArgToCurCmd("=");
 			}
 	;
 arg_list:	arg
