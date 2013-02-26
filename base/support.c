@@ -439,7 +439,7 @@ char ** getPATHenv(int *cnt)
 	int i=0,j=0,k=0;
 	
 	//PATH = "/bin:/usr/bin:/usr/sbin";
-	PATH = alias_find(&node_head_env,"PATH");
+	PATH = linkedlist_value(&node_head_env,"PATH");
 	if(strcmp(PATH,"PATH")==0)
 	{
 		//printf("Warning: PATH not set\n");
