@@ -919,7 +919,7 @@ void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data va
 		do {
 			if(strcmp(node_curr -> key, key) == 0) 
 			{
-				if(node_curr -> local) {
+				if(node_curr -> local) {											// Check only for the environmental variable flag
 					node_curr -> value = value;
 					char* nv_pair = linkedlist_getNV(&node_head_env, key);
     				if(nv_pair != NULL )											// putenv(name=value)
