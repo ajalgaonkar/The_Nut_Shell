@@ -137,16 +137,16 @@ command2:      	WORD
 			{
 				addArgToCurCmd($1);
 				addArgToCurCmd($3);
-				insertCommand("setenv");
+				insertCommand("setlocalvar");
 			}
 	|	WORD EQUALS STRING
 			{
 				addArgToCurCmd($1);
 				int string_len = strlen($3);
-				char *new_arg = malloc(strlen($3));
+				char *new_arg = (char *) malloc(strlen($3)*sizeof(char));
 				strncpy(new_arg,$3,string_len-1);
 				addArgToCurCmd(new_arg);
-				insertCommand("setenv");
+				insertCommand("setlocalvar");
 			}
 	;
 pipe	:	PIPE command2

@@ -65,21 +65,20 @@ char *get_path(char *arg)
     return(arg);
 }
 
-char *tilde_expansion(char *tilde)
+char * tilde_expansion(char *tilde)
 {
     int len = strlen(tilde);
     int i =0;
     //printf("\nExpansion for USER %s\n", tilde);
     if(len == 1)
     {
-        return(Home_Dir);
+        return(getHomeDir());
     }
     else{
-       
-            tilde++;
-            char *temp = tilde;
-            char *temp2 = tilde;
-            char user[20];
+        tilde++;
+        char *temp = tilde;
+        char *temp2 = tilde;
+        char user[20];
 	    char temp1[1000];
 	    char temp3[1000];
 	    char *path_final;
@@ -114,7 +113,7 @@ char *tilde_expansion(char *tilde)
                     return(path_final);
                 }
                 else{
-		strcpy(temp1,Home_Dir);
+		strcpy(temp1,getHomeDir());
 		strcpy(temp3,path2);
                 return(strcat(temp1,temp3));
 		}
@@ -655,8 +654,9 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 			printf("\nPlease enter a Variable Name to unset\n");
 			return 0;
 		}
-		printf("Trying to Delete....\n");
-		printf("%s\n", linkedlist_delete_node(&node_head_env, args[1])); 		// Deleete the linkedlist's head
+//		printf("Trying to Delete....\n");
+		linkedlist_delete_node(&node_head_env, args[1]);
+		//printf("%s\n", ); 		// Deleete the linkedlist's head
 		 	
     }
     else if( strcmp(cmd,"unalias")==0 )
@@ -670,11 +670,11 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 		printf("%s\n", linkedlist_delete_node(&node_head_aliases, args[1])); 	// Delete the linkedlist's head
 		 	
     }
-    else if( strcmp(cmd,"setenv") == 0 )
+    else if( strcmp(cmd,"setlocalvar") == 0 )
     {
     	if(args[1] != NULL && args[2] != NULL)
     	{
-    		linkedlist_insert(&node_head_env, args[1],args[2]); 				// Insert the Variable,Word Environment Variable Pair
+			linkedlist_insert(&node_head_env, args[1],args[2]); 				// Insert the Variable,Word Environment Variable Pair
     	}
     	else
     		printf("\nInvalid command to set Environment Variables.\n");
@@ -863,7 +863,7 @@ void processCmdLine()
 {
 	//printCmdline();
 	execCmdLine();
-	clearCmdLine();
+	clearCmdLine(); 	//Frees any malloc() allocated memory in datastructures
 	//sleep(1);
 }
 
@@ -924,6 +924,20 @@ int linkedlist_export(Node **node_head, linkedlist_data key)
 	
 }
 
+char * getHomeDir()
+{
+	char * homePath;
+	struct passwd *pw;
+	
+	homePath = linkedlist_value(&node_head_env,"HOME");
+	if(strcmp(homePath,"HOME")==0)
+	{
+		pw = getpwuid(getuid());
+		homePath = pw->pw_dir;
+	}
+	
+	return homePath;
+}
 
 // Inserts Key,Value into the Linked_List 
 void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data value)
@@ -949,7 +963,7 @@ void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data va
 		}while(node_curr);
 	}
 	else {
-	    Node *node_new = malloc(sizeof(Node));
+	    Node *node_new = malloc(sizeof(Node)+2);
 	     
 	    node_new -> key = key;
 	    node_new -> value = value;
@@ -957,7 +971,7 @@ void linkedlist_insert(Node **node_head, linkedlist_data key, linkedlist_data va
 	    node_new -> next = *node_head;
 	    *node_head = node_new;
 	}
-	printf("Successfully Inserted: %s\n", value);
+	printf("Added: %s=%s\n", key,value);
 }
  
 // Removes the Node of the specified key
@@ -977,11 +991,13 @@ linkedlist_data linkedlist_delete_node(Node **node_head, linkedlist_data key)
 				node_prev -> next = node_curr -> next;
 			}
 			free(node_curr);
+			printf("Removed %s=%s\n",key,result);
 			return result;
 		}
 		node_prev = node_curr;
 		node_curr = node_curr -> next;
 	}
+	printf("Not Found\n");
 	return result;
 }
  

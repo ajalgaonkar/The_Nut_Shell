@@ -11,16 +11,12 @@
 void *malloc();
 int exit_flag;
 char *Home_Dir;
-main(argc, argv, envp)
 
-int argc;
-char **argv, **envp;
-
+int main(int argc, char ** argv, char ** envp)
 {
 	extern int yydebug;
 	char c;
 	Prompt = "nut> ";
-
 	initialize();
 
 	printf(Prompt);
@@ -37,13 +33,11 @@ char **argv, **envp;
 	return 0;
 }
 
-
 /*
  *	initialize -- initialize the global vars.
  */
 
 int initialize()
-
 {
     /* Defined by student */
    
