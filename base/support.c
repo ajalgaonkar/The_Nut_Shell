@@ -691,11 +691,12 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
     }
     else if( strcmp(cmd,"export") == 0 )										// To export a given name to Environment
     {
-    	if(args[1] != NULL)
+    	int i=1;
+    	while(args[i] != NULL)
     	{
-    		if(linkedlist_export(&node_head_env, args[1]))						// Updates the 'local' flag to 1
+    		if(linkedlist_export(&node_head_env, args[i]))						// Updates the 'local' flag to 1
     		{
-    			char* nv_pair = linkedlist_getNV(&node_head_env, args[1]);
+    			char* nv_pair = linkedlist_getNV(&node_head_env, args[i]);
     			if(nv_pair != NULL )											// putenv(name=value)
     				putenv(nv_pair);											// putenv(name=value)
     			else
@@ -703,9 +704,9 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
     		}
     		else
 	    		printf("No such Variable found.\n");
+	    	++i;
     	}
-    	else
-    		printf("\nEnter word to export\n");
+    	
     }
 	else
 	{
