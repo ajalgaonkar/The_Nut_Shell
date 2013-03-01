@@ -117,20 +117,12 @@ command :	command2 EOL
 	;
 command2:      	WORD
 			{
-			    /* put code here to distinguish builtins */
-			    /* from builtin commands */
-			    /* identify_word($1); */
-			    /*YaccDebug("WORD");*/
-				//printf("command with no args found\n");
+			    //YaccDebug("WORD");
 				insertCommand($1);
 			}
 	|	WORD arg_list
 			{
-			    /* put code here to distinguish builtins */
-			    /* from builtin commands */
-			    /* command_with_arg($1,$2); */
-			    /* YaccDebug("WORD arg_list"); */
-				//printf("command with args found\n");
+			    // YaccDebug("WORD arg_list"); 
 				insertCommand($1);
 			}
 	|	WORD EQUALS WORD
@@ -209,15 +201,12 @@ error_redir:	TWOGT WORD
 arg	: 	INTEGER
 			{
 			    YaccDebug("INTEGER");
-				//printf("Integer Argument Found!\n");
 				addArgToCurCmd($1);
 			}
 	|	WORD
 			{
 			    YaccDebug("WORD");
-				//printf("Word Argument Found!\n");
-				
-			    char *temp_path;
+				char *temp_path;
 			    if(strncmp($1,"~",1) == 0)
 				{
 					temp_path = tilde_expansion($1);
@@ -229,7 +218,6 @@ arg	: 	INTEGER
 	|	STRING
 			{
 			    YaccDebug("STRING");
-				//printf("String Argument Found!\n");
 				int string_len = strlen($1);
 				char *new_arg = malloc(strlen($1));
 				strncpy(new_arg,$1,string_len-1);
@@ -238,9 +226,7 @@ arg	: 	INTEGER
 	|	MINUS arg
 			{
 			    YaccDebug("MINUS arg");
-				//printf("Minus Argument Found!\n");
 				addArgToCurCmd(strcat("-",$2));
-				
 			}
 	|	EQUALS
 			{

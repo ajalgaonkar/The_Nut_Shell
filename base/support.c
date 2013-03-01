@@ -17,6 +17,8 @@
 
 
 
+int waitCnt;
+
 /* 
  *	 LinkedList Implementation
  */ 
@@ -82,9 +84,10 @@ char * tilde_expansion(char *tilde)
 	    char temp1[1000];
 	    char temp3[1000];
 	    char *path_final;
-            int i = 0;
-            char *path;
-            char *path2 = strpbrk(temp,"/");
+        int i = 0;
+        char *path;
+     
+		char *path2 = strpbrk(temp,"/");
 
             if(path2 != NULL)
             {
@@ -106,17 +109,17 @@ char * tilde_expansion(char *tilde)
                     }
                     char *user_dir = pw->pw_dir;
                     //printf("\n%s\n",temp);
-		    strcpy(temp1,user_dir);
-		    strcpy(temp3,path2);
+					strcpy(temp1,user_dir);
+					strcpy(temp3,path2);
                     path_final = strcat(temp1,temp3);
                     //printf("\n..%s..\n",path_final);
                     return(path_final);
                 }
                 else{
-		strcpy(temp1,getHomeDir());
-		strcpy(temp3,path2);
-                return(strcat(temp1,temp3));
-		}
+					strcpy(temp1,getHomeDir());
+					strcpy(temp3,path2);
+					return(strcat(temp1,temp3));
+				}
             }
             else
             {
@@ -134,24 +137,36 @@ char * tilde_expansion(char *tilde)
 
 }
 
-
-void get_dir(char *wrd)
+void get_dir(char *dirName)
 {
     char cwd[1024];
     DIR *d;
     int print_count = 0;
     struct stat sb1;
-
-        printf("The directory will be listed...\n");
+	
+	if(strcmp(dirName,".")==0)
+	{
         if (getcwd(cwd, sizeof(cwd)) != NULL)
         {
             printf("Current working dir: %s\n", cwd);
             d = opendir(cwd);
+		}
+	}
+	else
+	{
+		if(checkIfDir(dirName)==0)
+			d = opendir(dirName);
+		else
+		{
+			printf("Invalid Directory Name: %s\n",dirName);
+			return;
+		}
+	}
             while (1)
             {
                 struct dirent * entry;
                 const char * d_name;
-                entry = readdir (d);
+                entry = readdir(d);
                 if (! entry)
                 {
                     break;
@@ -168,7 +183,7 @@ void get_dir(char *wrd)
                 else if(S_ISSOCK(sb1.st_mode))
                     printf("%25s= ",d_name);
                 else
-                printf ("%25s ",d_name);
+					printf ("%25s ",d_name);
                 print_count++;
                 if(print_count == 5){
                 printf("\n");
@@ -176,7 +191,6 @@ void get_dir(char *wrd)
                 }
             }
             printf("\n");
-        }
 }
 
 
@@ -464,8 +478,17 @@ char ** getPATHenv(int *cnt)
 		{
 			tpath[j]='\0';
 			j=0;
-			paths[k] = (char *) malloc(strlen(tpath)*sizeof(char));
-			strcpy(paths[k],tpath);
+			
+			if(strncmp(tpath,"~",1) == 0)
+			{
+				paths[k] = (char *) malloc(strlen(tilde_expansion(tpath))*sizeof(char));
+				strcpy(paths[k],tilde_expansion(tpath));
+			}
+			else
+			{
+				paths[k] = (char *) malloc(strlen(tpath)*sizeof(char));
+				strcpy(paths[k],tpath);
+			}
 			k++;
 		}
 		else
@@ -527,6 +550,7 @@ int checkIfDir(char *dirPath)
 	return -1;
 }
 
+// Returns 1 is string has / char indicating its a path
 int isPath(char * cmd)
 {
 	int flag=0,i=0;
@@ -562,7 +586,6 @@ int set_write(int* wpipe)
 int execCmd(char * cmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
 {
 	pid_t cpid;
-	
 	cpid = fork();
 	
 	if(cpid < 0)
@@ -600,27 +623,52 @@ int execCmd(char * cmd, char **args, int* rpipe, int* wpipe, int infd, int outfd
 	return 0;
 }
 
-//Find the path of the command in PATH env variable and execute
-//
-int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
+
+/*
+ * Execute a built in command, with its read and write FDs defined
+ */
+int execIfBuiltIn(char *cmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
 {
-	//char *PATH = "/bin:/usr/bin";
-	char **paths;
+	int builtin=1;
+	int o_infd, o_outfd, o_errfd;
 	char *path;
-	char cfp[256]; 							// full path of cmd
-	int pn=0,i,builtin=1;
 	
-	char *cmd = linkedlist_value(&node_head_aliases, Ocmd);				// Chec if the command is not a builtin and is an alias
+	/*
+	o_infd = STDIN_FILENO;
+	o_outfd = STDOUT_FILENO;
+	o_errfd = STDERR_FILENO;
+	
+	if(rpipe) 				// there's a pipe from the previous process
+        set_read(rpipe);
+    else if(infd>0)
+	{
+		dup2(infd, STDIN_FILENO);
+	}
+        
+	if(wpipe) 				// there's a pipe to the next process
+        set_write(wpipe);
+    else if(outfd>0)
+	{
+		dup2(outfd, STDOUT_FILENO);
+	}
+		
+	if(errfd>0)
+		dup2(errfd, STDERR_FILENO);
+
+	*/
 	
 	if(cmd==NULL)
-		printf("Error: No word entered\n");
+	{
+		printf("Error: No command entered\n");
+		return 0;
+	}
     else if(strcmp(cmd,"dir") == 0)
-        get_dir(cmd);
-    else if(strcmp(cmd,"bye") == 0)
-    {	
-    	//printf("Thank You for using Nutty Shell. Good Bye !\n");
-        exit(0);
-    }
+	{
+		if(!args[1])
+			get_dir(".");  			//List CWD
+		else
+			get_dir(args[1]);
+	}
     else if(strcmp(cmd,"cd")==0)
     {
 		if(args[1])
@@ -637,39 +685,6 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 				printf("Now on '%s'\n",homedir);
 		}			
     }
-    else if(strncmp(cmd,"~",1) == 0)
-    {
-        //printf("Enter Expansion");
-        char *expansion = tilde_expansion(cmd);
-        printf("Directory is: %s\n",expansion);
-    }
-    else if( strcmp(cmd,"printenv") == 0 )								// Call to print the Environment Variables
-    { 
-    	linkedlist_print(&node_head_env); 								// print the Env linkedlist
-    }
-    else if( strcmp(cmd,"unset")==0 )
-    {
-    	if(args[1] == NULL)
-		{    
-			printf("\nPlease enter a Variable Name to unset\n");
-			return 0;
-		}
-//		printf("Trying to Delete....\n");
-		linkedlist_delete_node(&node_head_env, args[1]);
-		//printf("%s\n", ); 		// Deleete the linkedlist's head
-		 	
-    }
-    else if( strcmp(cmd,"unalias")==0 )
-    {
-    	if(args[1] == NULL)
-		{    
-			printf("\nPlease enter a word to unset\n");
-			return 0;
-		}
-		printf("Trying to Delete....\n");
-		printf("%s\n", linkedlist_delete_node(&node_head_aliases, args[1])); 	// Delete the linkedlist's head
-		 	
-    }
     else if( strcmp(cmd,"setlocalvar") == 0 )
     {
     	if(args[1] != NULL && args[2] != NULL)
@@ -678,18 +693,21 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
     	}
     	else
     		printf("\nInvalid command to set Environment Variables.\n");
+    }	
+    else if( strcmp(cmd,"printenv") == 0 )								// Call to print the Environment Variables
+    { 
+    	linkedlist_print(&node_head_env); 								// print the Env linkedlist
     }
-    else if( strcmp(cmd,"alias") == 0 )
+    else if( strcmp(cmd,"unset")==0 )
     {
-    	if(args[1] != NULL && args[2] != NULL )
-    	{
-    		linkedlist_insert(&node_head_aliases, args[1],args[2]); 			// Insert the Word,String Aliases Pair
-    	}
-    	else
-    		linkedlist_print(&node_head_aliases); 								// print the Aliases linkedlist
-    		//printf("\nInvalid command to set Aliases.\n");
+    	if(args[1] == NULL)
+		{    
+			printf("\nEnter a Variable Name to unset\n");
+			return 0;
+		}
+		linkedlist_delete_node(&node_head_env, args[1]);
     }
-    else if( strcmp(cmd,"export") == 0 )										// To export a given name to Environment
+	else if( strcmp(cmd,"export") == 0 )										// To export a given name to Environment
     {
     	int i=1;
     	while(args[i] != NULL)
@@ -706,24 +724,112 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 	    		printf("No such Variable found.\n");
 	    	++i;
     	}
-    	
+    }
+	else if( strcmp(cmd,"alias") == 0 )
+    {
+    	if(args[1] != NULL && args[2] != NULL )
+    	{
+    		linkedlist_insert(&node_head_aliases, args[1],args[2]); 			// Insert the Word,String Aliases Pair
+    	}
+    	else
+    		linkedlist_print(&node_head_aliases); 								// print the Aliases linkedlist
+    		//printf("\nInvalid command to set Aliases.\n");
+    }
+    else if( strcmp(cmd,"unalias")==0 )
+    {
+    	if(args[1] == NULL)
+		{    
+			printf("\nPlease enter a word to unset\n");
+			return 0;
+		}
+		printf("Trying to Delete....\n");
+		printf("%s\n", linkedlist_delete_node(&node_head_aliases, args[1])); 	// Delete the linkedlist's head
+		 	
+    }
+	else if(strcmp(cmd,"bye") == 0)
+    {	
+		//exit_flag=1;
+    	//printf("Thank You for using Nutty Shell. Good Bye !\n");
+        exit(0);
+    }
+    else if(strncmp(cmd,"~",1) == 0)
+    {
+        //printf("Enter Expansion");
+        char *expansion = tilde_expansion(cmd);
+        printf("Directory is: %s\n",expansion);
     }
 	else
 	{
 		builtin=0;
 	}
 	
-	if(builtin)
+	/*
+	if(rpipe) 				// there's a pipe from the previous process
+        dup2(o_infd, rpipe[0]);
+    else if(infd>0)
 	{
+		dup2(o_infd, wpipe[1]);
+	}
+        
+	if(wpipe) 				// there's a pipe to the next process
+        dup2(o_outfd, STDIN_FILENO);
+    else if(outfd>0)
+	{
+		dup2(o_outfd, outfd);
+	}
+		
+	if(errfd>0)
+		dup2(o_errfd,errfd);
+	*/
+	
+	return builtin;
+}
+
+
+/*
+ * Command can be a built in command, a path to a executable, or
+ * just an executable file name which needs to be found in PATH variable
+ * This function routes the execution accordingly.
+ */
+int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, int outfd, int errfd)
+{
+	char **paths;
+	char cfp[256]; 							// full path of cmd
+	int pn=0,i,builtin=1;
+	
+	char *cmd = linkedlist_value(&node_head_aliases, Ocmd);				// Check if the command is an alias and expand
+	
+	printf("Check if builtin: %s\n",cmd);
+	if(execIfBuiltIn(cmd,args,rpipe,wpipe,infd,outfd,errfd))
+	{
+		waitCnt--;	
 		return 0;
 	}
+	printf("Not builtin\n");
 	
-	if(isPath(cmd))			//If command is a path.
+	if(isPath(cmd))			//If command is a path
 	{
-		if(checkIfExecutable(cmd)==0)
-			execCmd(cmd,args,rpipe,wpipe,infd,outfd,errfd);
+		//Check if tilde expansion is required
+		char *full_path;
+		if(strncmp(cmd,"~",1) == 0)
+		{
+			full_path = tilde_expansion(cmd);
+			if(checkIfExecutable(full_path)==0)
+			{
+				return execCmd(full_path,args,rpipe,wpipe,infd,outfd,errfd);
+			}
+			else
+				printf("File is not executable: %s\n",full_path);
+		}
 		else
-			printf("File is not executable: %s\n",cmd);
+		{
+			if(checkIfExecutable(cmd)==0)
+			{
+				return execCmd(cmd,args,rpipe,wpipe,infd,outfd,errfd);
+			}
+			else
+				printf("File is not executable: %s\n",cmd);
+		}
 	}
 	else		//Find the cmd in PATH variable
 	{
@@ -757,6 +863,11 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 	return 0;	
 }
 
+/* 
+ * Executes all the commands in the command line, 
+ * setting up pipes between commands (child procs)
+ * Handling redirections
+ */
 void execCmdLine()
 {
 
@@ -767,7 +878,9 @@ void execCmdLine()
 	int infd=1,outfd=-1,errfd=-1;
 	
 	// Open files for redirection if specified
-	if(cmdLine.inFile)	//Check if Input 
+	
+	waitCnt = cmdLine.commandCnt;
+	if(cmdLine.inFile)	
 	{
 		infd = open(cmdLine.inFile, O_RDONLY);
 		if(infd<0)
@@ -806,14 +919,13 @@ void execCmdLine()
 		}
 	}
 	
-	//Basic Case, single command
+	//Single command, no pipes
 	if(cmdLine.commandCnt==1 ) 
 	{
 		tcmd = cmdLine.cmdListHead;
 		findAndExecCmd(tcmd->cmd,charListToArray(tcmd->argList_head,tcmd->argc),NULL,NULL,infd,outfd,errfd);
 		cmdLine.inFile = NULL;
 		cmdLine.outFile = NULL;
-		//wait();
 	}
 	
 	//Multiple commands needing pipe
@@ -849,14 +961,12 @@ void execCmdLine()
 		close(rpipe[0]);
 		close(rpipe[1]);
 		//
-		for(i = 0; i < cmdLine.commandCnt; i++)
-		{
-			//wait(); 	//Wait for all commands to complete
-		}
-		
 	}
 	
-	//sleep(1);
+	for(i = 0; i < waitCnt; i++)
+	{
+		wait(); 	//Wait for all commands excuted on child proc to complete
+	}
 }
 
 void processCmdLine()
@@ -864,10 +974,8 @@ void processCmdLine()
 	//printCmdline();
 	execCmdLine();
 	clearCmdLine(); 	//Frees any malloc() allocated memory in datastructures
-	//sleep(1);
 }
 
-//---------------------------------Command Functions end -----------------------------//
 
 //--------------------------------- Linked List Functions ----------------------------// 
 
