@@ -799,13 +799,13 @@ int findAndExecCmd(char *Ocmd, char **args, int* rpipe, int* wpipe, int infd, in
 	
 	char *cmd = linkedlist_value(&node_head_aliases, Ocmd);				// Check if the command is an alias and expand
 	
-	printf("Check if builtin: %s\n",cmd);
+	//printf("Check if builtin: %s\n",cmd);
 	if(execIfBuiltIn(cmd,args,rpipe,wpipe,infd,outfd,errfd))
 	{
 		waitCnt--;	
 		return 0;
 	}
-	printf("Not builtin\n");
+	//printf("Not builtin\n");
 	
 	if(isPath(cmd))			//If command is a path
 	{
